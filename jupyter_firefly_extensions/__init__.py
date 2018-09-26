@@ -1,3 +1,6 @@
+import time;
+import platform;
+import random;
 
 def _jupyter_server_extension_paths():
     return [{
@@ -19,3 +22,10 @@ def load_jupyter_server_extension(nb_server_app):
     page_config['fireflyURL'] = url
     # for key,val in web_app.settings.items():
     #     print('{} => {}'.format(key,val))
+
+    hostname= platform.node()
+    timestamp= time.time()
+    channel= 'ffChan-{}-{}-{}'.format(hostname,int(timestamp),random.randint(1,100))
+    page_config['fireflyChannel'] = channel
+    print('firefly URL: {}'.format(url))
+    print('firefly Channel: {}'.format(channel))

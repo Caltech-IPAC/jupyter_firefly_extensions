@@ -7,7 +7,7 @@
 from __future__ import print_function
 
 # the name of the project
-name = 'jupyter_firelfy_fits_viewer'
+name = 'jupyter_firefly_extensions'
 
 #-----------------------------------------------------------------------------
 # Minimal Python version sanity check
@@ -41,22 +41,22 @@ nbextension = pjoin(here, name, 'nbextension')
 labextension = pjoin(here, name, 'labextension')
 
 
-# Representative files that should exist after a successful build
-jstargets = [
-    pjoin(nbextension, 'extension.js'),
-    pjoin(here, 'lib', 'lab_extension.js'),
-]
+# # Representative files that should exist after a successful build
+# jstargets = [
+#     pjoin(nbextension, 'extension.js'),
+#     pjoin(here, 'lib', 'lab_extension.js'),
+# ]
 
 version_ns = {}
 with io.open(pjoin(here, name, '_version.py'), encoding="utf8") as f:
     exec(f.read(), {}, version_ns)
 
 
-cmdclass = create_cmdclass(('jsdeps',))
-cmdclass['jsdeps'] = combine_commands(
-    install_npm(here, build_cmd='build:all'),
-    ensure_targets(jstargets),
-)
+# cmdclass = create_cmdclass(('jsdeps',))
+# cmdclass['jsdeps'] = combine_commands(
+#     install_npm(here, build_cmd='build:all'),
+#     # ensure_targets(jstargets),
+# )
 
 
 package_data = {
@@ -67,7 +67,7 @@ package_data = {
 }
 
 data_files = expand_data_files([
-    ('share/jupyter/nbextensions/jupyter_firelfy_fits_viewer', [pjoin(nbextension, '*.js*')]),
+    ('share/jupyter/nbextensions/jupyter_firefly_extensions', [pjoin(nbextension, '*.js*')]),
     ('share/jupyter/lab/extensions', [pjoin(labextension, '*.tgz')])
 ])
 
@@ -76,7 +76,7 @@ setup_args = dict(
     name            = name,
     version         = version_ns['__version__'],
     scripts         = glob(pjoin('scripts', '*')),
-    cmdclass        = cmdclass,
+    # cmdclass        = cmdclass,
     packages        = find_packages(here),
     package_data    = package_data,
     include_package_data = True,
