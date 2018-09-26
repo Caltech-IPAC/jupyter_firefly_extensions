@@ -1,0 +1,18 @@
+labextension/lib/
+nbextension/lib/
+nbextension/embed/
+node_modules/
+npm-debug.log
+*.egg-info/
+build/
+dist/
+*.iml
+lib/
+
+# Compiled javascript
+jupyter_fits_viewer/__pycache__/
+jupyter_fits_viewer/static/
+__pycache__
+
+# OS X
+.DS_Store

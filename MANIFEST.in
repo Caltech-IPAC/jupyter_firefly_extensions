@@ -1,0 +1,2 @@
+graft jupyter_firefly_extensions/nbextension
+include jupyter_firefly_extensions/labextension/*.tgz

@@ -1,0 +1,54 @@
+{
+  "name": "jupyter_firefly_extensions",
+  "version": "0.1.0",
+  "description": "A package for rendering FITS in Jupyter",
+  "author": "Trey Roby <roby@ipac.caltech.edu>",
+  "main": "lib/index.js",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "scripts": {
+    "build:lib": "babel src -d lib",
+    "build:labextension": "cd jupyter_firefly_extensions && rimraf labextension && mkdirp labextension && cd labextension && npm pack ../..",
+    "build:nbextension": "webpack",
+    "build:all": "npm run build:lib && npm run build:labextension && npm run build:nbextension",
+    "build": "npm run build:lib",
+    "prepare": "npm run build",
+    "watch:nbextension": "webpack --watch",
+    "watch:lib": "babel src -d lib --watch",
+    "watch": "npm-run-all -p watch:*"
+  },
+  "babel": {
+    "presets": [
+      "latest"
+    ],
+    "plugins": [
+      "transform-class-properties"
+    ]
+  },
+  "jupyterlab": {
+    "mimeExtension": "lib/lab_extension"
+  },
+  "dependencies": {
+    "b64-to-blob": "^1.2.19",
+    "firefly-api-access": "0.0.4"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.18.2",
+    "babel-loader": "^6.4.0",
+    "babel-plugin-transform-class-properties": "^6.19.0",
+    "babel-preset-latest": "^6.16.0",
+    "css-loader": "^0.25.0",
+    "file-loader": "^0.9.0",
+    "json-loader": "^0.5.4",
+    "mkdirp": "^0.5.1",
+    "npm-run-all": "^4.1.1",
+    "rimraf": "^2.6.2",
+    "style-loader": "^0.13.1",
+    "url-loader": "^1.1.1",
+    "webpack": "^2.2.0"
+  }
+}
