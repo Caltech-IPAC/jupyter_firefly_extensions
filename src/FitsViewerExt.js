@@ -128,7 +128,7 @@ function showImage(cacheKey, plotId, filename, firefly) {
     const {IMAGE, NewPlotMode}= util.image;
     const {dispatchPlotImage, dispatchAddViewer}= action;
     dispatchAddViewer(filename, NewPlotMode.create_replace.key, IMAGE);
-    util.renderDOM(filename, ui.ApiFullDisplay,{viewerId:filename} );
+    util.renderDOM(filename, ui.ApiFullImageDisplay,{viewerId:filename} );
     dispatchPlotImage({
         plotId:plotId,
         viewerId:filename,

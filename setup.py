@@ -33,30 +33,17 @@ from glob import glob
 
 from setuptools import setup, find_packages
 
-from setupbase import (create_cmdclass, install_npm, ensure_targets,
-    combine_commands, expand_data_files)
+from setupbase import expand_data_files
 
 here = os.path.abspath(os.path.dirname(__file__))
 nbextension = pjoin(here, name, 'nbextension')
 labextension = pjoin(here, name, 'labextension')
 
 
-# # Representative files that should exist after a successful build
-# jstargets = [
-#     pjoin(nbextension, 'extension.js'),
-#     pjoin(here, 'lib', 'lab_extension.js'),
-# ]
 
 version_ns = {}
 with io.open(pjoin(here, name, '_version.py'), encoding="utf8") as f:
     exec(f.read(), {}, version_ns)
-
-
-# cmdclass = create_cmdclass(('jsdeps',))
-# cmdclass['jsdeps'] = combine_commands(
-#     install_npm(here, build_cmd='build:all'),
-#     # ensure_targets(jstargets),
-# )
 
 
 package_data = {
@@ -86,21 +73,23 @@ setup_args = dict(
     url                  = 'https://github.com/Caltech-IPAC/firefly',
     license              = 'BSD',
     platforms            = "Linux, Mac OS X, Windows",
-    keywords             = ['ipython', 'jupyter', 'firefly', 'caltech', 'ipac'],
+    keywords             = ['jupyter', 'firefly', 'caltech', 'ipac', 'astronomy', 'visualization'],
     classifiers          = [
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     install_requires     = [
-        'notebook>=4.3.0'
+        'notebook>=4.3.0',
+        'jupyterlab>=0.28'
     ]
 )
 

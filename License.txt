@@ -1,4 +1,4 @@
-Copyright © <2014>, California Institute of Technology, developed for the 
+Copyright © <2018>, California Institute of Technology, developed for the
 Spitzer Science Center and the NASA/IPAC Infrared Science Archive (IRSA) with 
 support from NASA, and for Large Synoptic Survey Telescope (LSST) with
 support from NSF. 
