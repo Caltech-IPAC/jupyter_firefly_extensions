@@ -4,5 +4,7 @@
 # Copyright (c) Trey Roby.
 # Distributed under the terms of the Modified BSD License.
 
-version_info = (0, 1, 1, 'dev')
+
+version_info = (0, 2, 0, 'dev')
 __version__ = ".".join(map(str, version_info))
+version_short = ".".join(map(str,version_info[0:3]))

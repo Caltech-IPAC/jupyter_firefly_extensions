@@ -1,49 +1,52 @@
-import {fitsViewerRendererFactory, FITS_MIME_TYPE} from './FitsViewerExt.js';
+import {activateFitsViewerExt, createNewFitsViewerDocumentWidget, FITS_MIME_TYPE} from './FitsViewerExt.js';
+import { ILayoutRestorer, JupyterLab, JupyterLabPlugin } from '@jupyterlab/application';
+import { IInstanceTracker, InstanceTracker} from '@jupyterlab/apputils';
+import { plugins } from '@jupyterlab/apputils-extension';
+import { palette } from '@jupyterlab/apputils-extension';
+import { IDocumentManager } from '@jupyterlab/docmanager';
+import {activateSlateCommandExt} from './SlateCommandExt.js';
+import { ICommandPalette } from '@jupyterlab/apputils';
+
+import * as Image from './Image.js';
+import * as Chart from './Chart.js';
+import * as Table from './Table.js';
+import * as Slate from './SlateWidget.js';
+import * as ServerConnection from './ServerConnection.js';
+import {version} from '../package.json';
+
+const base = require('@jupyter-widgets/base');
 
 
+const fireflyWidgets= Object.assign({}, Image, Chart, Table, Slate, ServerConnection, {version});
 
-const fitsIFileType= {
-        name: 'FITS',
-        displayName: 'FITS file',
-        fileFormat: 'base64',
-        mimeTypes: [FITS_MIME_TYPE],
-        extensions: ['.fits']
-    };
 
 const extension = [
     {
         id: 'jupyter_firefly_extensions:fitsviewer',
-        name: 'FITS viewer - firefly',
-        rendererFactory:fitsViewerRendererFactory,
-        rank: 0,
-        dataType: 'string',
-        fileTypes: [fitsIFileType],
-        documentWidgetFactoryOptions: {
-            name: 'Firefly FITS viewer',
-            modelName: 'base64',
-            primaryFileType: 'FITS',
-            fileTypes: ['FITS'],
-            defaultFor: ['FITS']
+        autoStart: true,
+        activate: activateFitsViewerExt,
+        requires: [ILayoutRestorer],
+        provides: [IInstanceTracker],
+    },
+    {
+        id: 'jupyter_firefly_extensions:showSlate',
+        autoStart: true,
+        requires: [IDocumentManager,  ILayoutRestorer],
+        // requires: [IDocumentManager,  ILayoutRestorer, ICommandPalette],
+        activate: activateSlateCommandExt
+    },
+    {
+        id: 'jupyter_firefly_extensions:firefly_widgets',
+        requires: [base.IJupyterWidgetRegistry],
+        activate: function(app, widgets) {
+            widgets.registerWidget({
+                name: 'jupyter-firefly',
+                version: fireflyWidgets.version,
+                exports: fireflyWidgets
+            });
         },
-
+        autoStart: true
     }
-    // --- adding a second extension for a given mime type does not work it is a bug in jupyter lab
-    // --- https://github.com/jupyterlab/jupyterlab/issues/5381
-    // , {
-    //     id: 'jupyter_firefly_extensions:fitsviewer2',
-    //     name: 'FITS2',
-    //     rendererFactory:fitsViewerRendererFactory2,
-    //     rank: 0,
-    //     dataType: 'string',
-    //     fileTypes: [fitsIFileType],
-    //     documentWidgetFactoryOptions: {
-    //         name: 'FITS2',
-    //         modelName: 'base64',
-    //         primaryFileType: 'FITS',
-    //         fileTypes: ['FITS'],
-    //     },
-    //
-    // }
 ];
 
 export default extension;
