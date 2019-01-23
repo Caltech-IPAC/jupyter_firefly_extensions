@@ -48,6 +48,7 @@ export function activateSlateCommandExt(app) {
 }
 
 function openSlateMulti(app, id, activate) {
+    activate= window.document.getElementById(id) || activate;
     if (!openWidgets[id]) {
         let widget = new SlateRootWidget(id);
         app.shell.addToMainArea(widget);
@@ -55,9 +56,9 @@ function openSlateMulti(app, id, activate) {
             const {action}= firefly;
             action.dispatchChangeActivePlotView(undefined);
         });
-        if (activate) openWidgets[id]= widget;
+        openWidgets[id]= widget;
     }
-    app.shell.activateById(openWidgets[id]);
+    if (activate) app.shell.activateById(id);
 
 }
 
@@ -149,7 +150,7 @@ function createNode(filename) {
     let node = document.createElement('div');
     node.id= filename;
     const tmpElement=  document.createElement('div');
-    tmpElement.innerHTML= '<div>I am here</div>';
+    tmpElement.innerHTML= '<div>Firefly Loading...</div>';
     node.appendChild(tmpElement);
     return node;
 }
