@@ -1,22 +1,20 @@
 # jupyter_firefly_extensions
 
-A Jupyter Lab mime extension for rendering FITS.
+A Jupyterlab extension for rendering FITS images with Firefly.
 
-This is in the development phase `jupyter_firefly_extensions` in npm but
-it is not pip installable yet.
-
-_Note_ - the readme is currently being written and is very incomplete
+This package is in the development phase. `jupyter_firefly_extensions` is installable via npm but
+it is not yet pip installable.
 
 
 ## Overview
 
 This extension adds the following features to JupyterLab:
 
-  - Double click on a FITS file and see it in a tab
+  - Double click or right-click on a FITS file and see it in a tab
   - Start the full Firefly viewer in a tab.
-  - use `FireflyClient` in a python notebook to start Firefly in a tab and send data
-  (tables,images,charts) to it using the `FireflyClient` API
-  - The are several Widgets (images,tables,charts) that can be used in a notebook
+  - Use `FireflyClient` in a Python notebook to start Firefly in a tab and send data
+  (tables, images, charts) to it using the `FireflyClient` API
+  - There are several widgets (images, tables, charts) that can be used in a notebook
   - The `SlateWidget` is a full Firefly viewer widget that provides a `FireflyClient` instance to embed a full Firefly in a notebook as a widget
 
 
@@ -24,10 +22,15 @@ This extension adds the following features to JupyterLab:
 ## Prerequisites
 
 * JupyterLab ^0.35.1
+* nodejs
+* ipywidgets
 
+The above prerequisites can be installed with `conda install jupyterlab nodejs ipywidgets`.
 
+Additionally, to use all features you should also install the `firefly_client` package
+as discussed below.
 
-### _Very Important_: first setup the firefly URL - 3 ways
+### _Very Important_: first setup the Firefly URL - 3 ways
 
  * Add the following line to your `~/.jupyter/jupyter_notebook_config.py`
 
@@ -53,7 +56,7 @@ _Or_
    setenv FIREFLY_URL http://localhost:8080/firefly
    ```
 
-**Where the URL points to a firefly server.**
+**where the URL points to a Firefly server.**
 
 
 
@@ -73,7 +76,9 @@ jupyter serverextension enable --py jupyter_firefly_extensions
 
 _First:_
 
-Make sure you have clone the `firefly_client` (https://github.com/Caltech-IPAC/firefly_client) is in your `PYTHONPATH` or `pip install -e firefly_client` it
+If developing `firefly_client`, be sure to clone the `firefly_client` repository
+(https://github.com/Caltech-IPAC/firefly_client)
+and then do `pip install -e .` from inside its directory.
 
 _Then:_
 ```bash
@@ -82,6 +87,7 @@ git clone https://github.com/Caltech-IPAC/jupyter_firefly_extensions
 cd jupyter_firefly_extensions
 jupyter labextension install . --no-build
 jupyter lab build
+pip install -e .
 jupyter serverextension enable --py jupyter_firefly_extensions
 ```
 
@@ -107,7 +113,8 @@ pip uninstall jupyter_firefly_extensions
 ### Examples
 The `examples` directory has several example notebooks to demonstrate the extension features. When using the examples you should copy the directory and contents to another place or jupyter lab will and to keep rebuilding
 
- - `slate-demo-explicit.ipynb`, `slate-demo-explicit2.ipynb` - demo's opening a Firefly tab and sending data to it with the `FireflyClient` python API
+ - `slate-demo-explicit.ipynb`, `slate-demo-explicit2.ipynb` - demonstrates
+    opening a Firefly tab and sending data to it with the `FireflyClient` python API
  - `slate-widget-demo.ipnb` - simple demo of the Firefly slate widget
  - Three example demoing the images, tables, and charts widgets
      - `Image Colorbar Test.ipynb`
