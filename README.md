@@ -68,7 +68,7 @@ To fully take advantage for the extension you should first install `firefly_clie
 pip install firefly_client
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
 jupyter labextension install jupyter_firefly_extensions
-pip install git+git://github.com/Caltech-IPAC/jupyter_firefly_extensions
+pip install jupyter_firefly_extensions
 jupyter serverextension enable --py jupyter_firefly_extensions
 ```
 
