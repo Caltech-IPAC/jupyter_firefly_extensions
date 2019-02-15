@@ -2,8 +2,8 @@
 
 A Jupyterlab extension for rendering FITS images with Firefly.
 
-This package is in the development phase. `jupyter_firefly_extensions` is installable via npm but
-it is not yet pip installable.
+This package is in the development phase. `jupyter_firefly_extensions` is 
+installable via npm (Javascript side) and pip (Python side).
 
 
 ## Overview
