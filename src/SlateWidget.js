@@ -18,6 +18,8 @@ export const SlateModel = widgets.DOMWidgetModel.extend({
 
 var seq = 1;
 
+const divMap= {};
+
 // Custom View. Renders the widget model.
 export const SlateView= widgets.DOMWidgetView.extend({
     render() {
@@ -74,6 +76,15 @@ export const SlateView= widgets.DOMWidgetView.extend({
         };
         action.dispatchApiToolsView(true,false);
         this.controlApp= util.startAsAppFromApi(id, props, {});
+        divMap[id]= {controlApp:this.controlApp, renderTreeId};
+
+        Object.keys(divMap).forEach( (k) => {
+            if (k!==id && !window.document.getElementById(k) && divMap[k]) {
+               divMap[k].controlApp.unrender();
+               divMap[k]= undefined;
+            }
+
+        });
     }
 
 
