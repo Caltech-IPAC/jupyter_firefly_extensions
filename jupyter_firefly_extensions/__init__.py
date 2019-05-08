@@ -4,6 +4,7 @@ import random
 import os
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
+from firefly_client import FireflyClient
 
 
 from .image import *
@@ -22,25 +23,25 @@ def _jupyter_nbextension_paths():
     }]
 
 
-
-
 def _jupyter_server_extension_paths():
     return [{
         "module": "jupyter_firefly_extensions"
     }]
 
 
+class SendToFireflyHandler(IPythonHandler):
 
-class HelloWorldHandler(IPythonHandler):
-
-    def initialize(self):
-        print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> in HelloWorldHandler.init')
-
+    def initialize(self, notebook_dir, firefly_url):
+        self.notebook_dir = notebook_dir
+        self.firefly_url = firefly_url
 
     def get(self):
-        print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> in HelloWorldHandler')
-        self.finish('here in Hello, world!')
-
+        path = self.get_argument('path', 'not found')
+        print('sendToFirefly:uploading: ' + path)
+        fc = FireflyClient(url=self.firefly_url)
+        upload_name = fc.upload_file(self.notebook_dir+'/'+path)
+        print('sendToFirefly:done: ')
+        self.finish(upload_name)
 
 
 def load_jupyter_server_extension(nb_server_app):
@@ -52,16 +53,13 @@ def load_jupyter_server_extension(nb_server_app):
     """
     web_app = nb_server_app.web_app
     config_url = nb_server_app.config.get('Firefly', {}).get('url', '')
-    url= None
+    url = None
     if 'FIREFLY_URL' in os.environ:
         url = os.environ['FIREFLY_URL']
     if not url:
-        url= config_url
+        url = config_url
 
     web_app.settings['fireflyURL']= url
-
-
-
 
     page_config = web_app.settings.setdefault('page_config_data', dict())
     page_config['fireflyLabExtension'] = 'true'
@@ -69,17 +67,21 @@ def load_jupyter_server_extension(nb_server_app):
     # for key,val in web_app.settings.items():
     #     print('{} => {}'.format(key,val))
 
-    hostname= platform.node()
-    timestamp= time.time()
-    channel= 'ffChan-{}-{}-{}'.format(hostname,int(timestamp),random.randint(1,100))
+    hostname = platform.node()
+    timestamp = time.time()
+    channel = 'ffChan-{}-{}-{}'.format(hostname,int(timestamp),random.randint(1,100))
     page_config['fireflyChannel'] = channel
     print('firefly URL: {}'.format(url))
     print('firefly Channel: {}'.format(channel))
     os.environ['fireflyChannelLab'] = channel
     os.environ['fireflyURLLab'] = url
     os.environ['fireflyLabExtension'] = 'true'
-    
 
+    # setup server endpoint: sendToFirefly: http://127.0.0.1:8888/lab/sendToFirefly?path=x.fits
     host_pattern = '.*$'
-    route_pattern = url_path_join(web_app.settings['base_url'], 'lab/hello')
-    web_app.add_handlers(host_pattern, [(route_pattern, HelloWorldHandler)])
+    route_pattern = url_path_join(web_app.settings['base_url'], 'lab/sendToFirefly')
+    web_app.add_handlers(host_pattern, [(route_pattern, SendToFireflyHandler,
+                                         {
+                                             'notebook_dir': nb_server_app.notebook_dir,
+                                             'firefly_url': url
+                                          })])
