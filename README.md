@@ -2,8 +2,8 @@
 
 A Jupyterlab extension for rendering FITS images with Firefly.
 
-This package is in the development phase. `jupyter_firefly_extensions` is installable via npm but
-it is not yet pip installable.
+This package is in the development phase. `jupyter_firefly_extensions` is installable via npm and
+pip.
 
 
 ## Overview
@@ -23,12 +23,11 @@ This extension adds the following features to JupyterLab:
 
 * JupyterLab ^0.35.1
 * nodejs
-* ipywidgets
+* ipywidgets ^7.0.0
+* firefly_client ^2.1.1
 
-The above prerequisites can be installed with `conda install jupyterlab nodejs ipywidgets`.
-
-Additionally, to use all features you should also install the `firefly_client` package
-as discussed below.
+The first three prerequisites can be installed with `conda install jupyterlab nodejs ipywidgets`.
+The `firefly_client` package can be installed with `pip install firefly_client`.
 
 ### _Very Important_: first setup the Firefly URL - 3 ways
 
@@ -62,7 +61,7 @@ _Or_
 
 ### Install
 
-To fully take advantage for the extension you should first install `firefly_client`.  If you choose not to use `firefly_client` not all the features will be available. Also, to use any of the widgets in this package you must install the jupyter widget manager (`@jupyter-widgets/jupyterlab-manager`)
+To use any of the widgets in this package you must install the jupyter widget manager (`@jupyter-widgets/jupyterlab-manager`)
 
 ```bash
 pip install firefly_client
