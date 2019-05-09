@@ -24,9 +24,10 @@ This extension adds the following features to JupyterLab:
 * JupyterLab ^0.35.1
 * nodejs
 * ipywidgets ^7.0.0
+* astropy ^3.0.0
 * firefly_client ^2.1.1
 
-The first three prerequisites can be installed with `conda install jupyterlab nodejs ipywidgets`.
+The first four prerequisites can be installed with `conda install jupyterlab nodejs ipywidgets astropy`.
 The `firefly_client` package can be installed with `pip install firefly_client`.
 
 ### _Very Important_: first setup the Firefly URL - 3 ways
