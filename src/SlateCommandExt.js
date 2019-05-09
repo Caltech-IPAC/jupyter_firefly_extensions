@@ -51,7 +51,9 @@ function openSlateMulti(app, id, activate) {
     activate= window.document.getElementById(id) || activate;
     if (!openWidgets[id]) {
         let widget = new SlateRootWidget(id);
-        app.shell.addToMainArea(widget);
+        if (app.shell.addToMainArea) app.shell.addToMainArea(widget); // --- pre version 1
+        else if (app.shell.add) app.shell.add(widget, 'main');  // version 1
+        else throw Error('Could not add firefly to tab');
         getFireflyAPI().then( (firefly) => {
             const {action}= firefly;
             action.dispatchChangeActivePlotView(undefined);

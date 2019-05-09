@@ -16,9 +16,9 @@ name = 'jupyter_firefly_extensions'
 import sys
 
 v = sys.version_info
-if v[:2] < (3, 3):
+if v[:2] < (3, 5):
     # Note: 3.3 is untested, but we'll still allow it
-    error = "ERROR: %s requires Python version 3.3 or above." % name
+    error = "ERROR: %s requires Python version 3.5 or above." % name
     print(error, file=sys.stderr)
     sys.exit(1)
 
@@ -80,16 +80,16 @@ setup_args = dict(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8'
     ],
     install_requires     = [
-        'notebook>=4.3.0',
-        'jupyterlab>=0.28'
+        'notebook>=5.0.0',
+        'jupyterlab>=0.35',
+        'ipywidgets>=7.0.0',
+        'firefly_client>=2.1.1'
     ]
 )
 

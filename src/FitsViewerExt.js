@@ -1,6 +1,5 @@
 import b64toBlob from 'b64-to-blob';
 import {addFirefly, buildURLErrorHtml} from './FireflyCommonUtils.js';
-import {get} from 'lodash';
 import { Widget } from '@phosphor/widgets';
 import { ABCWidgetFactory, DocumentRegistry, DocumentWidget, IDocumentWidget } from '@jupyterlab/docregistry';
 import { InstanceTracker} from '@jupyterlab/apputils';
@@ -51,11 +50,16 @@ export function activateFitsViewerExt(app, restorer) {
     const tracker = new InstanceTracker({ namespace });
 
     // Handle state restoration.
-    restorer.restore(tracker, {
-        command: 'docmanager:open',
-        args: widget => ({ path: widget.context.path, factory: FACTORY }),
-        name: widget => widget.context.path
-    });
+    try {
+        restorer.restore(tracker, {
+            command: 'docmanager:open',
+            args: widget => ({ path: widget.context.path, factory: FACTORY }),
+            name: widget => widget.context.path
+        });
+    } catch (e) {
+        console.error(e);
+        console.error('restore not working')
+    }
 
     app.docRegistry.addWidgetFactory(factory);
 
@@ -98,21 +102,31 @@ export class FitsViewerWidget extends Widget {
         // super({ node: createNode(options.resolver._session.name) });
         super({ node: createNode(context._path) });
         // this._mimeType = options.mimeType;
+        const useModel= window.firefly && window.firefly.jlExtUseModel || false;
         this.addClass(CLASS_NAME);
         this.filename= context._path;
         idCounter++;
         this.plotId= `${this.filename}-${idCounter}`;
         this.loaded= false;
 
-        context.ready.then(() => {
-          if (this.isDisposed) return;
-          
-          this.renderModel(context.model).then(() => {
-            // this._ready.resolve(void 0);
-          });
-          context.model.contentChanged.connect( this.renderModel, this );
-          context.fileChanged.connect( this.renderModel, this );
-        });
+        if (useModel) {
+            context.ready.then(() => {
+                if (this.isDisposed) return;
+
+                this.renderModel(context.model).then(() => {
+                    // this._ready.resolve(void 0);
+                });
+                context.model.contentChanged.connect( this.renderModel, this );
+                context.fileChanged.connect( this.renderModel, this );
+            });
+        }
+        else {
+            if (this.isDisposed) return;
+            this.renderModel().then(() => {
+            });
+            context.model.contentChanged.connect( this.renderModel, this );
+            context.fileChanged.connect( this.renderModel, this );
+        }
 
     }
 
@@ -129,12 +143,19 @@ export class FitsViewerWidget extends Widget {
         }
 
         return getFireflyAPI()
-            // .then( (firefly) => loadFileToServer(model.data[FITS_MIME_TYPE], this.filename, firefly) )
-            .then( (firefly) => loadFileToServer(model.toString(), this.filename, firefly) )
+            .then( (firefly) => {
+                return  model ? loadFileToServer(model.toString(), this.filename, firefly) :
+                                tellLabToloadFileToServer(this.filename, firefly)
+            } )
             .then( (response) => response.text())
             .then( (text) => {
-                const [status, cacheKey] = text.split('::::');
-                showImage(cacheKey,this.plotId, this.filename, firefly);
+                if (model) {
+                    const [, cacheKey] = text.split('::::');
+                    showImage(cacheKey,this.plotId, this.filename, firefly);
+                }
+                else {
+                    showImage(text,this.plotId, this.filename, firefly);
+                }
                 this.loaded= true;
             })
             .catch( (e) => {
@@ -160,6 +181,12 @@ export class FitsViewerWidget extends Widget {
 }
 
 
+function tellLabToloadFileToServer( filename, firefly) {
+    const {fetchUrl}= firefly.util;
+    const UL_URL= window.document.location.href+ `/sendToFirefly?path=${filename}`;
+    const options = { method: 'GET' };
+    return fetchUrl(UL_URL,options,false, false);
+}
 
 
 function loadFileToServer( fileData, filename, firefly) {
@@ -261,4 +288,17 @@ function createNode(filename) {
 //         // return new FitsViewerDocument(context);
 //         return new DocumentWidget({ content:new FitsViewerWidget(context), context, reveal:true, toolbar:null });
 //     }
+// }
+
+
+// const a= {
+//     name: 'some-name',
+//     fileTypes: ['csv'],
+//     defaultFor: [],
+//     defaultRendered: [],
+//     readOnly: false,
+//     modelName: 'text',
+//     preferKernel: false,
+//     canStartKernel: false,
+//     widgetCreated: new Signal(null),
 // }
