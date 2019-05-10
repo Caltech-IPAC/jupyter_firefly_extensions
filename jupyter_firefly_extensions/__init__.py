@@ -30,6 +30,9 @@ def _jupyter_server_extension_paths():
     }]
 
 
+logger = logging.getLogger(__name__)
+
+
 class SendToFireflyHandler(IPythonHandler):
 
     def initialize(self, notebook_dir, firefly_url):
@@ -37,25 +40,25 @@ class SendToFireflyHandler(IPythonHandler):
         self.firefly_url = firefly_url
 
     def get(self):
-        log = logging.getLogger(__name__)
         path = self.get_argument('path', 'not found')
         fc = FireflyClient(url=self.firefly_url)
+        upload_name = 'FAILED:'
 
-        file_names = self.generate_file_names(path,self.notebook_dir)
+        file_names = self.generate_file_names(path, self.notebook_dir)
         found = False
         for f in file_names:
             if self.can_read(f):
-                log.info('sendToFirefly: uploading: ' + f)
+                logger.info('sendToFirefly: uploading: ' + f)
                 upload_name = fc.upload_file(f)
                 found = True
                 break
 
         if found:
-            log.info('sendToFirefly: success, Upload key: ' + upload_name)
+            logger.info('sendToFirefly: success, Upload key: ' + upload_name)
         else:
-            all_file_str = ', '.join(n for n in filenames)
+            all_file_str = ', '.join(n for n in file_names)
             upload_name = 'FAILED: ' + all_file_str
-            log.info('sendToFirefly:failed: could not find file. tried: : ' + all_file_str)
+            logger.info('sendToFirefly:failed: could not find file. tried: : ' + all_file_str)
 
         self.finish(upload_name)
 
@@ -67,9 +70,12 @@ class SendToFireflyHandler(IPythonHandler):
 
     @staticmethod
     def generate_file_names(path, notebook_dir):
-        names = [notebook_dir+'/'+path, os.path.abspath(path)]
+        names = [
+            os.path.join(notebook_dir, path),
+            os.path.abspath(path)
+        ]
         if 'HOME' in os.environ:
-            names.append(os.environ['HOME'] + '/' + path)
+            names.append(os.path.join(os.environ['HOME'], path))
         return names
 
 
@@ -80,7 +86,6 @@ def load_jupyter_server_extension(nb_server_app):
     Args:
         nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
-    logger = logging.getLogger(__name__)
     web_app = nb_server_app.web_app
     config_url = nb_server_app.config.get('Firefly', {}).get('url', '')
     url = None
@@ -89,7 +94,7 @@ def load_jupyter_server_extension(nb_server_app):
     if not url:
         url = config_url
 
-    web_app.settings['fireflyURL']= url
+    web_app.settings['fireflyURL'] = url
 
     page_config = web_app.settings.setdefault('page_config_data', dict())
     page_config['fireflyLabExtension'] = 'true'
@@ -99,7 +104,7 @@ def load_jupyter_server_extension(nb_server_app):
 
     hostname = platform.node()
     timestamp = time.time()
-    channel = 'ffChan-{}-{}-{}'.format(hostname,int(timestamp),random.randint(1,100))
+    channel = 'ffChan-{}-{}-{}'.format(hostname, int(timestamp), random.randint(1, 100))
     page_config['fireflyChannel'] = channel
     logger.info('firefly URL: {}'.format(url))
     logger.info('firefly Channel: {}'.format(channel))
