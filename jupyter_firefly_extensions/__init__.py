@@ -2,6 +2,7 @@ import time
 import platform
 import random
 import os
+import logging
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 from firefly_client import FireflyClient
@@ -36,12 +37,41 @@ class SendToFireflyHandler(IPythonHandler):
         self.firefly_url = firefly_url
 
     def get(self):
+        log = logging.getLogger(__name__)
         path = self.get_argument('path', 'not found')
-        print('sendToFirefly:uploading: ' + path)
         fc = FireflyClient(url=self.firefly_url)
-        upload_name = fc.upload_file(self.notebook_dir+'/'+path)
-        print('sendToFirefly:done: ')
+        first_try_file = self.notebook_dir+'/'+path
+        second_try_file = os.path.abspath(path)
+        third_try_file = ''
+        if 'HOME' in os.environ:
+            third_try_file = os.environ['HOME'] + '/' + path
+
+        if self.can_read(first_try_file):
+            log.info('sendToFirefly: uploading: ' + first_try_file)
+            upload_name = fc.upload_file(first_try_file)
+        elif self.can_read(second_try):
+            log.info('sendToFirefly: uploading: ' + second_try_file)
+            upload_name = fc.upload_file(second_try_file)
+        elif len(third_try_file) and self.can_read(third_try_file):
+            log.info('sendToFirefly: uploading: ' + third_try_file)
+            upload_name = fc.upload_file(third_try_file)
+        else:
+            upload_name = 'FAILED: ' + first_try_file + ', ' + second_try_file + ', ' + third_try_file
+
+        if upload_name.startswith('FAILED'):
+            log.info('sendToFirefly:failed: could not find file. tried: %s, %s, %s'
+                     % (first_try_file, second_try_file, third_try_file))
+        else:
+            log.info('sendToFirefly: success, Upload key: ' + upload_name)
+
         self.finish(upload_name)
+
+    @staticmethod
+    def can_read(f):
+        if os.path.exists(f):
+                return os.access(f, os.R_OK)
+        return false
+
 
 
 def load_jupyter_server_extension(nb_server_app):
@@ -51,6 +81,7 @@ def load_jupyter_server_extension(nb_server_app):
     Args:
         nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
+    logger = logging.getLogger(__name__)
     web_app = nb_server_app.web_app
     config_url = nb_server_app.config.get('Firefly', {}).get('url', '')
     url = None
@@ -71,8 +102,8 @@ def load_jupyter_server_extension(nb_server_app):
     timestamp = time.time()
     channel = 'ffChan-{}-{}-{}'.format(hostname,int(timestamp),random.randint(1,100))
     page_config['fireflyChannel'] = channel
-    print('firefly URL: {}'.format(url))
-    print('firefly Channel: {}'.format(channel))
+    logger.info('firefly URL: {}'.format(url))
+    logger.info('firefly Channel: {}'.format(channel))
     os.environ['fireflyChannelLab'] = channel
     os.environ['fireflyURLLab'] = url
     os.environ['fireflyLabExtension'] = 'true'

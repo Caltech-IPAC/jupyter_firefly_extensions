@@ -97,45 +97,28 @@ export class FitsViewerWidget extends Widget {
     /**
      * Construct a new output widget.
      */
-    // constructor(options) {
     constructor(context) {
-        // super({ node: createNode(options.resolver._session.name) });
         super({ node: createNode(context._path) });
-        // this._mimeType = options.mimeType;
         const useModel= window.firefly && window.firefly.jlExtUseModel || false;
         this.addClass(CLASS_NAME);
         this.filename= context._path;
         idCounter++;
         this.plotId= `${this.filename}-${idCounter}`;
         this.loaded= false;
-
-        if (useModel) {
-            context.ready.then(() => {
-                if (this.isDisposed) return;
-
-                this.renderModel(context.model).then(() => {
-                    // this._ready.resolve(void 0);
-                });
-                context.model.contentChanged.connect( this.renderModel, this );
-                context.fileChanged.connect( this.renderModel, this );
-            });
-        }
-        else {
-            if (this.isDisposed) return;
-            this.renderModel().then(() => {
-            });
-            context.model.contentChanged.connect( this.renderModel, this );
-            context.fileChanged.connect( this.renderModel, this );
-        }
-
+        if (this.isDisposed) return;
+        this.renderModel(context,useModel).then(() => {
+        });
+        context.model.contentChanged.connect( this.renderModel, this );
+        context.fileChanged.connect( this.renderModel, this );
     }
 
     /**
      * Render FITS into this widget's node.
      */
-    renderModel(model) {
+    renderModel(context, useModelFirst) {
 
         const {getFireflyAPI}= window;
+        if (this.isDisposed) return;
 
         if (this.loaded) {
             return getFireflyAPI()
@@ -144,25 +127,39 @@ export class FitsViewerWidget extends Widget {
 
         return getFireflyAPI()
             .then( (firefly) => {
-                return  model ? loadFileToServer(model.toString(), this.filename, firefly) :
-                                tellLabToloadFileToServer(this.filename, firefly)
+                if (useModelFirst) {
+                    return context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly))
+                }
+                else {
+                    return tellLabToloadFileToServer(this.filename, firefly)
+                }
             } )
             .then( (response) => response.text())
             .then( (text) => {
-                if (model) {
+                if (useModelFirst) {
                     const [, cacheKey] = text.split('::::');
                     showImage(cacheKey,this.plotId, this.filename, firefly);
                 }
                 else {
-                    showImage(text,this.plotId, this.filename, firefly);
+                    if (text && text.length<300 && !text.startsWith('FAILED')) {
+                        showImage(text,this.plotId, this.filename, firefly);
+                    }
+                    else {
+                        console.log('Firefly FitsViewExt: Failed to upload from server, ' +
+                                          'falling back to (slower) browser upload.');
+                        context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly))
+                            .then( (response) => response.text())
+                            .then( (text) => {
+                                const [, cacheKey] = text.split('::::');
+                                showImage(cacheKey, this.plotId, this.filename, firefly);
+                            });
+                    }
                 }
                 this.loaded= true;
             })
             .catch( (e) => {
                 const div= document.getElementById(this.filename);
                 if (div) div.innerHTML=buildURLErrorHtml(e);
-                // throw new Error(
-                //     `${e.message}. ${ERROR_MSG_CONT}`);
             });
     }
 
@@ -185,7 +182,11 @@ function tellLabToloadFileToServer( filename, firefly) {
     const {fetchUrl}= firefly.util;
     const UL_URL= window.document.location.href+ `/sendToFirefly?path=${filename}`;
     const options = { method: 'GET' };
-    return fetchUrl(UL_URL,options,false, false);
+    return fetchUrl(UL_URL,options,false, false)
+        .catch( e => {
+            console.log('Got Error from upload request');
+            return 'FAILED';
+        });
 }
 
 
