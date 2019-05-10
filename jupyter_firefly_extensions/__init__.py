@@ -40,29 +40,22 @@ class SendToFireflyHandler(IPythonHandler):
         log = logging.getLogger(__name__)
         path = self.get_argument('path', 'not found')
         fc = FireflyClient(url=self.firefly_url)
-        first_try_file = self.notebook_dir+'/'+path
-        second_try_file = os.path.abspath(path)
-        third_try_file = ''
-        if 'HOME' in os.environ:
-            third_try_file = os.environ['HOME'] + '/' + path
 
-        if self.can_read(first_try_file):
-            log.info('sendToFirefly: uploading: ' + first_try_file)
-            upload_name = fc.upload_file(first_try_file)
-        elif self.can_read(second_try):
-            log.info('sendToFirefly: uploading: ' + second_try_file)
-            upload_name = fc.upload_file(second_try_file)
-        elif len(third_try_file) and self.can_read(third_try_file):
-            log.info('sendToFirefly: uploading: ' + third_try_file)
-            upload_name = fc.upload_file(third_try_file)
-        else:
-            upload_name = 'FAILED: ' + first_try_file + ', ' + second_try_file + ', ' + third_try_file
+        file_names = self.generate_file_names(path,self.notebook_dir)
+        found = False
+        for f in file_names:
+            if self.can_read(f):
+                log.info('sendToFirefly: uploading: ' + f)
+                upload_name = fc.upload_file(f)
+                found = True
+                break
 
-        if upload_name.startswith('FAILED'):
-            log.info('sendToFirefly:failed: could not find file. tried: %s, %s, %s'
-                     % (first_try_file, second_try_file, third_try_file))
-        else:
+        if found:
             log.info('sendToFirefly: success, Upload key: ' + upload_name)
+        else:
+            all_file_str = ', '.join(n for n in filenames)
+            upload_name = 'FAILED: ' + all_file_str
+            log.info('sendToFirefly:failed: could not find file. tried: : ' + all_file_str)
 
         self.finish(upload_name)
 
@@ -72,6 +65,12 @@ class SendToFireflyHandler(IPythonHandler):
                 return os.access(f, os.R_OK)
         return false
 
+    @staticmethod
+    def generate_file_names(path, notebook_dir):
+        names = [notebook_dir+'/'+path, os.path.abspath(path)]
+        if 'HOME' in os.environ:
+            names.append(os.environ['HOME'] + '/' + path)
+        return names
 
 
 def load_jupyter_server_extension(nb_server_app):
