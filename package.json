@@ -1,6 +1,6 @@
 {
   "name": "jupyter_firefly_extensions",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A package for rendering FITS in Jupyter",
   "author": "Trey Roby <roby@ipac.caltech.edu>",
   "main": "lib/lab_extension.js",
@@ -52,5 +52,8 @@
     "style-loader": "^0.13.1",
     "url-loader": "^1.1.1",
     "webpack": "^2.2.0"
+  },
+  "resolutions": {
+    "**/event-stream": "^4.0.1"
   }
 }
