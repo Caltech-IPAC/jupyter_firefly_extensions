@@ -2,6 +2,7 @@ import time
 import platform
 import random
 import os
+import sys
 import logging
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
@@ -31,6 +32,10 @@ def _jupyter_server_extension_paths():
 
 
 logger = logging.getLogger(__name__)
+ch = logging.StreamHandler(sys.stderr)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 class SendToFireflyHandler(IPythonHandler):
@@ -58,7 +63,8 @@ class SendToFireflyHandler(IPythonHandler):
         else:
             all_file_str = ', '.join(n for n in file_names)
             upload_name = 'FAILED: ' + all_file_str
-            logger.info('sendToFirefly:failed: could not find file. tried: : ' + all_file_str)
+            logger.info('sendToFirefly:failed: could not find file. tried: : '
+                        + all_file_str)
 
         self.finish(upload_name)
 
@@ -66,7 +72,7 @@ class SendToFireflyHandler(IPythonHandler):
     def can_read(f):
         if os.path.exists(f):
                 return os.access(f, os.R_OK)
-        return false
+        return False
 
     @staticmethod
     def generate_file_names(path, notebook_dir):
