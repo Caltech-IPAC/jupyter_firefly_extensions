@@ -57,8 +57,7 @@ export function activateFitsViewerExt(app, restorer) {
             name: widget => widget.context.path
         });
     } catch (e) {
-        console.error(e);
-        console.error('restore not working')
+        console.error('Firefly FitsViewExt: restore not working',e)
     }
 
     app.docRegistry.addWidgetFactory(factory);
@@ -131,7 +130,7 @@ export class FitsViewerWidget extends Widget {
                     return context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly))
                 }
                 else {
-                    return tellLabToloadFileToServer(this.filename, firefly)
+                    return tellLabToLoadFileToServer(this.filename, firefly)
                 }
             } )
             .then( (response) => response.text())
@@ -141,7 +140,7 @@ export class FitsViewerWidget extends Widget {
                     showImage(cacheKey,this.plotId, this.filename, firefly);
                 }
                 else {
-                    if (text && text.length<300 && !text.startsWith('FAILED')) {
+                    if (text && text.length<300 && text.startsWith('${')) {
                         showImage(text,this.plotId, this.filename, firefly);
                     }
                     else {
@@ -178,13 +177,14 @@ export class FitsViewerWidget extends Widget {
 }
 
 
-function tellLabToloadFileToServer( filename, firefly) {
-    const {fetchUrl}= firefly.util;
-    const UL_URL= window.document.location.href+ `/sendToFirefly?path=${filename}`;
-    const options = { method: 'GET' };
-    return fetchUrl(UL_URL,options,false, false)
-        .catch( e => {
-            console.log('Got Error from upload request');
+function tellLabToLoadFileToServer( path, firefly) {
+    const {searchParams,origin,pathname}= new URL(window.document.location.href);
+    searchParams.append('path',path);
+    const slashMaybe= pathname.endsWith('/') ? '' : '/';
+    const newURL= `${origin}${pathname}${slashMaybe}sendToFirefly?${searchParams.toString()}`;
+    return firefly.util.fetchUrl(newURL,{ method: 'GET' },false, false)
+        .catch( (e) => {
+            console.error('Firefly FitsViewExt: Got Error from upload request',e);
             return 'FAILED';
         });
 }
