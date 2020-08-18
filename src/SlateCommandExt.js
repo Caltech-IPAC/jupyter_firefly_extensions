@@ -1,14 +1,10 @@
-import { Widget } from '@phosphor/widgets';
-import {addFirefly} from './FireflyCommonUtils.js';
+import { Widget } from '@lumino/widgets';
+import {findFirefly} from './FireflyCommonUtils.js';
 
 
-
-const fireflyInfo= addFirefly();
-
-
-var widgetId;
-var widgetCnt= 1;
-var openWidgets= {};
+let widgetId;
+let widgetCnt= 1;
+let openWidgets= {};
 
 
 /**
@@ -35,7 +31,8 @@ export function activateSlateCommandExt(app) {
     });
 
 
-    getFireflyAPI().then( (firefly) => {
+    findFirefly().then( (ffConfig) => {
+        const {firefly}= ffConfig;
         firefly.util.addActionListener(['StartLabWindow'], (action,state) => {
             openSlateMulti(app, action.payload.renderTreeId, false);
         });
@@ -54,8 +51,8 @@ function openSlateMulti(app, id, activate) {
         if (app.shell.addToMainArea) app.shell.addToMainArea(widget); // --- pre version 1
         else if (app.shell.add) app.shell.add(widget, 'main');  // version 1
         else throw Error('Could not add firefly to tab');
-        getFireflyAPI().then( (firefly) => {
-            const {action}= firefly;
+        findFirefly().then( (ffConfig) => {
+            const {action}= ffConfig.firefly;
             action.dispatchChangeActivePlotView(undefined);
         });
         openWidgets[id]= widget;
@@ -76,8 +73,8 @@ function openSlateSingleOnly(app) {
         let widget = new SlateRootWidget('slate-1');
         app.shell.addToMainArea(widget);
         widgetId= widget.id;
-        getFireflyAPI().then( (firefly) => {
-            const {action}= firefly;
+        findFirefly().then( (ffConfig) => {
+            const {action}= ffConfig.firefly;
             action.dispatchChangeActivePlotView(undefined);
         });
     }
@@ -98,9 +95,8 @@ export class SlateRootWidget extends Widget {
         this.id= id;
         this.title.label= 'Firefly: '+ id;
         this.title.closable= true;
-        const {getFireflyAPI}= window;
-        getFireflyAPI().then( (firefly) => {
-            this.startViewer(firefly,id);
+        findFirefly().then( (ffConfig) => {
+            this.startViewer(ffConfig.firefly,id);
         } );
     }
 
@@ -120,7 +116,7 @@ export class SlateRootWidget extends Widget {
             ],
         };
         action.dispatchApiToolsView(true,false);
-        this.controlApp= util.startAsAppFromApi(id, props, {});
+        this.controlApp= util.startAsAppFromApi(id, props);
     }
 
     dispose() {
@@ -140,8 +136,8 @@ export class SlateRootWidget extends Widget {
             this.controlApp.unrender();
             this.controlApp.render();
         }
-        getFireflyAPI().then( (firefly) => {
-            const {action}= firefly;
+        findFirefly().then( (ffConfig) => {
+            const {action}= ffConfig.firefly;
             action.dispatchChangeActivePlotView(undefined);
         });
     }
@@ -149,7 +145,7 @@ export class SlateRootWidget extends Widget {
 
 
 function createNode(filename) {
-    let node = document.createElement('div');
+    const node = document.createElement('div');
     node.id= filename;
     const tmpElement=  document.createElement('div');
     tmpElement.innerHTML= '<div>Firefly Loading...</div>';

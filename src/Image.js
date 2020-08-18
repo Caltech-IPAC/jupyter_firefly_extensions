@@ -1,9 +1,7 @@
-import {addFirefly} from './FireflyCommonUtils.js';
+import {findFirefly} from './FireflyCommonUtils.js';
 import {version} from '../package.json';
-const widgets = require('@jupyter-widgets/base');
-const _ = require('lodash');
-
-const fireflyURL= addFirefly();
+import * as widgets from '@jupyter-widgets/base';
+import {extend} from 'lodash';
 
 // for model attributes, including `_model_name`, `_view_name`, `_model_module`
 // and `_view_module` when different from the base class.
@@ -11,7 +9,7 @@ const fireflyURL= addFirefly();
 // When serializing entire widget state for embedding, only values different from the
 // defaults will be specified.
 export const ImageModel = widgets.DOMWidgetModel.extend({
-    defaults: _.extend(widgets.DOMWidgetModel.prototype.defaults(), {
+    defaults: extend(widgets.DOMWidgetModel.prototype.defaults(), {
         _model_name : 'ImageModel',
         _view_name : 'ImageView',
         _model_module : 'jupyter-firefly',
@@ -29,8 +27,9 @@ var seq = 1;
 // Custom View. Renders the widget model.
 export const ImageView = widgets.DOMWidgetView.extend({
     render: function() {
-        getFireflyAPI().then( (firefly) => {
+        findFirefly().then( (ffConfig) => {
 
+            const {firefly}= ffConfig;
             firefly.setGlobalPref({imageDisplayType: 'encapusulate'});
             const targetDiv= document.createElement('div');
             this.el.appendChild(targetDiv);

@@ -1,4 +1,4 @@
-import {addFirefly} from './FireflyCommonUtils.js';
+import {findFirefly} from './FireflyCommonUtils.js';
 import {initFirefly} from 'firefly-api-access';
 import { PageConfig} from '@jupyterlab/coreutils';
 
@@ -26,7 +26,7 @@ export const ServerConnection = widgets.DOMWidgetView.extend({
             const fireflyLabURL= PageConfig.getOption('fireflyURL');
             if (modelUrl && fireflyLabURL !== modelUrl) this.showURLMismatch= true;
             this.connectedURL= fireflyLabURL;
-            addFirefly();
+            findFirefly();
         }
         else {
             this.usingLabExt= false;

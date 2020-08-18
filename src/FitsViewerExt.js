@@ -1,8 +1,7 @@
 import b64toBlob from 'b64-to-blob';
-import {addFirefly, buildURLErrorHtml} from './FireflyCommonUtils.js';
-import { Widget } from '@phosphor/widgets';
-import { ABCWidgetFactory, DocumentRegistry, DocumentWidget, IDocumentWidget } from '@jupyterlab/docregistry';
-import { InstanceTracker} from '@jupyterlab/apputils';
+import {buildURLErrorHtml, findFirefly, makeLabEndpoint} from './FireflyCommonUtils.js';
+import { Widget } from '@lumino/widgets';
+import { ABCWidgetFactory, DocumentWidget} from '@jupyterlab/docregistry';
 
 
 export const FITS_MIME_TYPE = 'application/fits';
@@ -13,11 +12,7 @@ export const FITS_MIME_TYPE = 'application/fits';
  */
 const CLASS_NAME = 'jp-OutputWidgetFITS';
 
-
-
-const fireflyConfig= addFirefly();
-
-var idCounter=0;
+let idCounter=0;
 
 const FACTORY = 'FITS-IMAGE';
 
@@ -26,6 +21,7 @@ const fitsIFileType= {
     name: 'FITS',
     displayName: 'FITS file',
     fileFormat: 'base64',
+    format: 'base64',
     mimeTypes: [FITS_MIME_TYPE],
     extensions: ['.fits']
 };
@@ -47,37 +43,16 @@ export function activateFitsViewerExt(app, restorer) {
         readOnly: true
     });
     factory.createNewWidget= createNewFitsViewerDocumentWidget;
-    const tracker = new InstanceTracker({ namespace });
-
-    // Handle state restoration.
-    try {
-        restorer.restore(tracker, {
-            command: 'docmanager:open',
-            args: widget => ({ path: widget.context.path, factory: FACTORY }),
-            name: widget => widget.context.path
-        });
-    } catch (e) {
-        console.error('Firefly FitsViewExt: restore not working',e)
-    }
-
     app.docRegistry.addWidgetFactory(factory);
 
     factory.widgetCreated.connect((sender, widget) => {
-        // Notify the instance tracker if restore data needs to update.
-        widget.context.pathChanged.connect(() => {
-            tracker.save(widget);
-        });
-        tracker.add(widget);
-
         const types = app.docRegistry.getFileTypesForPath(widget.context.path);
 
-        if (types.length > 0) {
+        if (types.length) {
             widget.title.iconClass = types[0].iconClass || '';
             widget.title.iconLabel = types[0].iconLabel || '';
         }
     });
-
-    return tracker;
 }
 
 
@@ -95,6 +70,7 @@ export function createNewFitsViewerDocumentWidget(context) {
 export class FitsViewerWidget extends Widget {
     /**
      * Construct a new output widget.
+     * @param context
      */
     constructor(context) {
         super({ node: createNode(context._path) });
@@ -113,24 +89,29 @@ export class FitsViewerWidget extends Widget {
 
     /**
      * Render FITS into this widget's node.
+     * @param context
+     * @param useModelFirst
+     * @return {Promise<{firefly: Object, channel: string, fireflyURL: string}>}
      */
     renderModel(context, useModelFirst) {
 
-        const {getFireflyAPI}= window;
         if (this.isDisposed) return;
 
         if (this.loaded) {
-            return getFireflyAPI()
-                .then( (firefly) => firefly.action.dispatchChangeActivePlotView(this.plotId) );
+            return findFirefly()
+                .then( (ffConfig) => ffConfig.firefly.action.dispatchChangeActivePlotView(this.plotId) );
         }
 
-        return getFireflyAPI()
-            .then( (firefly) => {
+        let firefly, fireflyURL;
+        return findFirefly()
+            .then( (ffConfig) => {
+                firefly= ffConfig.firefly;
+                fireflyURL= ffConfig.fireflyURL;
                 if (useModelFirst) {
-                    return context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly))
+                    return context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly, fireflyURL));
                 }
                 else {
-                    return tellLabToLoadFileToServer(this.filename, firefly)
+                    return tellLabToLoadFileToServer(this.filename, firefly);
                 }
             } )
             .then( (response) => response.text())
@@ -146,7 +127,7 @@ export class FitsViewerWidget extends Widget {
                     else {
                         console.log('Firefly FitsViewExt: Failed to upload from server, ' +
                                           'falling back to (slower) browser upload.');
-                        context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly))
+                        context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly, fireflyURL))
                             .then( (response) => response.text())
                             .then( (text) => {
                                 const [, cacheKey] = text.split('::::');
@@ -163,26 +144,23 @@ export class FitsViewerWidget extends Widget {
     }
 
     dispose() {
-        return window.getFireflyAPI()
-            .then( (firefly) => firefly.action.dispatchDeletePlotView({plotId:this.plotId, holdWcsMatch:true}) );
+        return findFirefly()
+            .then( (ffConfig) => ffConfig.firefly.action.dispatchDeletePlotView({plotId:this.plotId, holdWcsMatch:true}) );
 
     }
 
     activate() {
         super.activate();
         if (this.loaded) {
-            return getFireflyAPI().then( (firefly) => firefly.action.dispatchChangeActivePlotView(this.plotId) );
+            return findFirefly().then( (ffConfig) => ffConfig.firefly.action.dispatchChangeActivePlotView(this.plotId) );
         }
     }
 }
 
 
 function tellLabToLoadFileToServer( path, firefly) {
-    const {searchParams,origin,pathname}= new URL(window.document.location.href);
-    searchParams.append('path',path);
-    const slashMaybe= pathname.endsWith('/') ? '' : '/';
-    const newURL= `${origin}${pathname}${slashMaybe}sendToFirefly?${searchParams.toString()}`;
-    return firefly.util.fetchUrl(newURL,{ method: 'GET' },false, false)
+    const url= makeLabEndpoint('lab/sendToFirefly', new URLSearchParams({'path':path}));
+    return firefly.util.fetchUrl(url,{ method: 'GET' },false, false)
         .catch( (e) => {
             console.error('Firefly FitsViewExt: Got Error from upload request',e);
             return 'FAILED';
@@ -190,19 +168,11 @@ function tellLabToLoadFileToServer( path, firefly) {
 }
 
 
-function loadFileToServer( fileData, filename, firefly) {
-
+function loadFileToServer( fileData, filename, firefly, fireflyURL) {
     const {fetchUrl, ServerParams}= firefly.util;
-    const UL_URL = `${fireflyConfig.fireflyURL}/sticky/CmdSrv?${ServerParams.COMMAND}=${ServerParams.UPLOAD}&filename=${filename}`;
+    const UL_URL = `${fireflyURL}/sticky/CmdSrv?${ServerParams.COMMAND}=${ServerParams.UPLOAD}&filename=${filename}`;
     const fitsBlob= b64toBlob(fileData);
-    const options = {
-        method: 'multipart',
-        params: {
-            filename,
-            type:'FITS',
-            file: fitsBlob
-        }
-    };
+    const options = { method: 'multipart', params: { filename, type:'FITS', file: fitsBlob } };
     return fetchUrl(UL_URL, options);
 }
 
@@ -220,7 +190,7 @@ function showImage(cacheKey, plotId, filename, firefly) {
 }
 
 function createNode(filename) {
-    let node = document.createElement('div');
+    const node = document.createElement('div');
     node.id= filename;
     return node;
 }

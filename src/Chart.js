@@ -1,9 +1,8 @@
-import {addFirefly} from './FireflyCommonUtils.js';
-const widgets = require('@jupyter-widgets/base');
-const _ = require('lodash');
+import {findFirefly} from './FireflyCommonUtils.js';
+import {extend} from 'lodash';
+import * as widgets from '@jupyter-widgets/base';
 
 
-const fireflyURL= addFirefly();
 
 // Custom Model. Custom widgets models must at least provide default values
 // for model attributes, including `_model_name`, `_view_name`, `_model_module`
@@ -12,7 +11,7 @@ const fireflyURL= addFirefly();
 // When serialiazing entire widget state for embedding, only values different from the
 // defaults will be specified.
 export const ChartModel = widgets.DOMWidgetModel.extend({
-    defaults: _.extend(widgets.DOMWidgetModel.prototype.defaults(), {
+    defaults: extend(widgets.DOMWidgetModel.prototype.defaults(), {
         _model_name : 'ChartModel',
         _view_name : 'ChartView',
         _model_module : 'jupyter-firefly',
@@ -37,8 +36,8 @@ export const ChartView = widgets.DOMWidgetView.extend({
     },
 
     redraw: function() {
-        getFireflyAPI().then( (firefly) => {
-            firefly.showChart(this.el.id, {tbl_group: this.model.get('tbl_group')});
+        findFirefly().then( (ffConfig) => {
+            ffConfig.firefly.showChart(this.el.id, {tbl_group: this.model.get('tbl_group')});
         });
     }
 
