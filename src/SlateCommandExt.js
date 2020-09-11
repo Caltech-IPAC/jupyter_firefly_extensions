@@ -110,6 +110,7 @@ export class SlateRootWidget extends Widget {
             disableDefaultDropDown: true,
             menu: [
                 {label:'Images', action:'ImageSelectDropDownSlateCmd'},
+                {label:'TAP Searches', action: 'TAPSearch'},
                 {label:'Catalogs', action:'IrsaCatalogDropDown'},
                 {label:'Charts', action:'ChartSelectDropDownCmd'},
                 {label:'Upload', action: 'FileUploadDropDownCmd'},
