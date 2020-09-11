@@ -1,9 +1,12 @@
+from typing import Optional, Awaitable
+
 import time
 import platform
 import random
 import os
 import sys
 import logging
+import json
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 from firefly_client import FireflyClient
@@ -31,11 +34,44 @@ def _jupyter_server_extension_paths():
     }]
 
 
+def _get_access_token():
+    if 'HOME' in os.environ:
+        home = os.environ['HOME']
+        token_file = '{}/.access_token'.format(home)
+        try:
+            f = open(token_file, "r")
+            token = f.read()
+            f.close()
+            return token
+        except IOError:
+            pass
+    if 'ACCESS_TOKEN' in os.environ:
+        token = os.environ['ACCESS_TOKEN']
+        return token
+    return None
+
+
 logger = logging.getLogger(__name__)
+logger.propagate = False
 ch = logging.StreamHandler(sys.stderr)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+firefly_config = None
+
+
+class GetFireflyUrlData(IPythonHandler):
+
+    def initialize(self):
+        pass
+
+    def get(self):
+        j_str = json.dumps(firefly_config)
+        logger.info('get_firefly_url_data: returning: ' + j_str)
+        self.finish(j_str)
+
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
 
 
 class SendToFireflyHandler(IPythonHandler):
@@ -46,9 +82,10 @@ class SendToFireflyHandler(IPythonHandler):
 
     def get(self):
         path = self.get_argument('path', 'not found')
-        fc = FireflyClient(url=self.firefly_url)
+        access_token = _get_access_token()
+        logger.info('sendToFirefly: uploading to {}, access token: {}'.format(self.firefly_url, access_token))
+        fc = FireflyClient(url=self.firefly_url, token=access_token)
         upload_name = 'FAILED:'
-
         file_names = self.generate_file_names(path, self.notebook_dir)
         found = False
         for f in file_names:
@@ -57,7 +94,6 @@ class SendToFireflyHandler(IPythonHandler):
                 upload_name = fc.upload_file(f)
                 found = True
                 break
-
         if found:
             logger.info('sendToFirefly: success, Upload key: ' + upload_name)
         else:
@@ -65,13 +101,15 @@ class SendToFireflyHandler(IPythonHandler):
             upload_name = 'FAILED: ' + all_file_str
             logger.info('sendToFirefly:failed: could not find file. tried: : '
                         + all_file_str)
-
         self.finish(upload_name)
+
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
 
     @staticmethod
     def can_read(f):
         if os.path.exists(f):
-                return os.access(f, os.R_OK)
+            return os.access(f, os.R_OK)
         return False
 
     @staticmethod
@@ -92,6 +130,7 @@ def load_jupyter_server_extension(nb_server_app):
     Args:
         nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
+    global firefly_config
     web_app = nb_server_app.web_app
     config_url = nb_server_app.config.get('Firefly', {}).get('url', '')
     url = None
@@ -102,9 +141,8 @@ def load_jupyter_server_extension(nb_server_app):
 
     web_app.settings['fireflyURL'] = url
 
-    page_config = web_app.settings.setdefault('page_config_data', dict())
-    page_config['fireflyLabExtension'] = 'true'
-    page_config['fireflyURL'] = url
+    # page_config = web_app.settings.setdefault('page_config_data', dict())
+    page_config = {'fireflyLabExtension': 'true', 'fireflyURL': url}
     # for key,val in web_app.settings.items():
     #     print('{} => {}'.format(key,val))
 
@@ -117,12 +155,13 @@ def load_jupyter_server_extension(nb_server_app):
     os.environ['fireflyChannelLab'] = channel
     os.environ['fireflyURLLab'] = url
     os.environ['fireflyLabExtension'] = 'true'
+    firefly_config = dict(page_config)
 
     # setup server endpoint: sendToFirefly: http://127.0.0.1:8888/lab/sendToFirefly?path=x.fits
     host_pattern = '.*$'
-    route_pattern = url_path_join(web_app.settings['base_url'], 'lab/sendToFirefly')
-    web_app.add_handlers(host_pattern, [(route_pattern, SendToFireflyHandler,
-                                         {
-                                             'notebook_dir': nb_server_app.notebook_dir,
-                                             'firefly_url': url
-                                          })])
+    send_pattern = url_path_join(web_app.settings['base_url'], 'lab/sendToFirefly')
+    get_ff_data_pattern = url_path_join(web_app.settings['base_url'], 'lab/fireflyLocation')
+    web_app.add_handlers(host_pattern, [
+        (send_pattern, SendToFireflyHandler, {'notebook_dir': nb_server_app.notebook_dir, 'firefly_url': url}),
+        (get_ff_data_pattern, GetFireflyUrlData, {})
+    ])

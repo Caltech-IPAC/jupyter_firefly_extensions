@@ -1,12 +1,12 @@
-import {addFirefly} from './FireflyCommonUtils.js';
+import {findFirefly} from './FireflyCommonUtils.js';
 import {version} from '../package.json';
-const widgets = require('@jupyter-widgets/base');
-const _ = require('lodash');
+import {extend} from 'lodash';
+import * as widgets from '@jupyter-widgets/base';
 
-const fireflyURL= addFirefly();
+// const fireflyURL= addFirefly();
 
 export const SlateModel = widgets.DOMWidgetModel.extend({
-    defaults: _.extend(widgets.DOMWidgetModel.prototype.defaults(), {
+    defaults: extend(widgets.DOMWidgetModel.prototype.defaults(), {
         _model_name : 'SlateModel',
         _view_name : 'SlateView',
         _model_module : 'jupyter-firefly',
@@ -23,8 +23,9 @@ const divMap= {};
 // Custom View. Renders the widget model.
 export const SlateView= widgets.DOMWidgetView.extend({
     render() {
-        getFireflyAPI().then( (firefly) => {
+        findFirefly().then( (ffConfig) => {
 
+            const {firefly}= ffConfig;
             const targetDiv= document.createElement('div');
             this.el.appendChild(targetDiv);
             targetDiv.style.width= '100%';
@@ -42,7 +43,7 @@ export const SlateView= widgets.DOMWidgetView.extend({
             this.model.set('channel', String(firefly.util.getWsChannel()));
 
 
-            getFireflyAPI().then( (firefly) => {
+            findFirefly().then( (ffConfig) => {
                 setTimeout(this.redraw, 0);
             } );
             this.touch();
@@ -75,7 +76,7 @@ export const SlateView= widgets.DOMWidgetView.extend({
             ],
         };
         action.dispatchApiToolsView(true,false);
-        this.controlApp= util.startAsAppFromApi(id, props, {});
+        this.controlApp= util.startAsAppFromApi(id, props);
         divMap[id]= {controlApp:this.controlApp, renderTreeId};
 
         Object.keys(divMap).forEach( (k) => {

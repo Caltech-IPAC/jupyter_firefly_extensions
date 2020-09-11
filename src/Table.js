@@ -1,8 +1,6 @@
-import {addFirefly} from './FireflyCommonUtils.js';
-const widgets = require('@jupyter-widgets/base');
-const _ = require('lodash');
-
-const fireflyURL= addFirefly();
+import {findFirefly} from './FireflyCommonUtils.js';
+import {extend} from 'lodash';
+import * as widgets from '@jupyter-widgets/base';
 
 // Custom Model. Custom widgets models must at least provide default values
 // for model attributes, including `_model_name`, `_view_name`, `_model_module`
@@ -11,7 +9,7 @@ const fireflyURL= addFirefly();
 // When serialiazing entire widget state for embedding, only values different from the
 // defaults will be specified.
 export const TableModel = widgets.DOMWidgetModel.extend({
-    defaults: _.extend(widgets.DOMWidgetModel.prototype.defaults(), {
+    defaults: extend(widgets.DOMWidgetModel.prototype.defaults(), {
         _model_name : 'TableModel',
         _view_name : 'TableView',
         _model_module : 'jupyter-firefly',
@@ -22,7 +20,8 @@ export const TableModel = widgets.DOMWidgetModel.extend({
 // Custom View. Renders the widget model.
 export const TableView = widgets.DOMWidgetView.extend({
     render: function() {
-        getFireflyAPI().then( (firefly) => {
+        findFirefly().then( (ffConfig) => {
+            const {firefly}= ffConfig;
             this.url_or_path = this.model.get('url_or_path');
             let tbl_id = this.model.get('tbl_id');
             if (!tbl_id) {
@@ -82,8 +81,3 @@ export const TableView = widgets.DOMWidgetView.extend({
     }
 });
 
-
-// module.exports = {
-//     TableModel : TableModel,
-//     TableView : TableView
-// };
