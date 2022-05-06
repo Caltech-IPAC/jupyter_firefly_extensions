@@ -11,12 +11,12 @@ from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 from firefly_client import FireflyClient
 
-
-from .image import *
-from .table import *
-from .chart import *
-from .utils import *
-from .slate_widget import *
+# commented out - to disable widget support
+# from .image import *
+# from .table import *
+# from .chart import *
+# from .utils import *
+# from .slate_widget import *
 
 
 def _jupyter_nbextension_paths():
@@ -84,7 +84,7 @@ class SendToFireflyHandler(IPythonHandler):
         path = self.get_argument('path', 'not found')
         access_token = _get_access_token()
         logger.info('sendToFirefly: uploading to {}, access token: {}'.format(self.firefly_url, access_token))
-        fc = FireflyClient(url=self.firefly_url, token=access_token)
+        fc = FireflyClient.make_client(url=self.firefly_url, token=access_token, launch_browser=False)
         upload_name = 'FAILED:'
         file_names = self.generate_file_names(path, self.notebook_dir)
         found = False

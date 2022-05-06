@@ -106,16 +106,18 @@ export class SlateRootWidget extends Widget {
             div: id,
             renderTreeId: id,
             template: 'FireflySlate',
-            showBgMonitor: false,
             disableDefaultDropDown: true,
-            menu: [
-                {label:'Images', action:'ImageSelectDropDownSlateCmd'},
-                {label:'TAP Searches', action: 'TAPSearch'},
-                {label:'Catalogs', action:'IrsaCatalogDropDown'},
-                {label:'Charts', action:'ChartSelectDropDownCmd'},
-                {label:'Upload', action: 'FileUploadDropDownCmd'},
-            ],
         };
+        const fallbackMenu= [
+            {label:'Images', action:'ImageSelectDropDownSlateCmd'},
+            {label:'TAP Searches', action: 'TAPSearch'},
+            {label:'Catalogs', action:'IrsaCatalogDropDown'},
+            {label:'Charts', action:'ChartSelectDropDownCmd'},
+            {label:'Upload', action: 'FileUploadDropDownCmd'},
+        ];
+        if (!firefly.originalAppProps) {
+            props.menu= fallbackMenu;
+        }
         action.dispatchApiToolsView(true,false);
         this.controlApp= util.startAsAppFromApi(id, props);
     }
