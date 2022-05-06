@@ -2,6 +2,7 @@ import b64toBlob from 'b64-to-blob';
 import {buildURLErrorHtml, findFirefly, makeLabEndpoint} from './FireflyCommonUtils.js';
 import { Widget } from '@lumino/widgets';
 import { ABCWidgetFactory, DocumentWidget} from '@jupyterlab/docregistry';
+import { PageConfig} from '@jupyterlab/coreutils';
 
 
 export const FITS_MIME_TYPE = 'application/fits';
@@ -20,7 +21,8 @@ const FACTORY = 'FITS-IMAGE';
 const fitsIFileType= {
     name: 'FITS',
     displayName: 'FITS file',
-    fileFormat: 'base64',
+    fileFormat: 'base64',  // TODO: try putting a null here to keep from loading file, the might be the answer
+                           // will need to check the JL version someway
     format: 'base64',
     mimeTypes: [FITS_MIME_TYPE],
     extensions: ['.fits']
@@ -33,6 +35,13 @@ const fitsIFileType= {
  */
 export function activateFitsViewerExt(app, restorer) {
     const namespace = 'firefly-imageviewer-widget';
+    const jlVersion= PageConfig.getOption('appVersion');
+    const vAry= jlVersion?.split('.').map( (x) => Number(x)) ?? [0,0,0];
+
+    // if Jupyter Lab version is 3.1 or greater then clear the fileFormat so it does not load the file on the client
+    // see - https://github.com/jupyterlab/jupyterlab/pull/7596
+    if (vAry[0] >=3 && vAry[1] >= 1) fitsIFileType.fileFormat= null;
+
     app.docRegistry.addFileType(fitsIFileType);
     const factory = new ABCWidgetFactory({
         name: FACTORY,

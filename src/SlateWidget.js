@@ -70,7 +70,7 @@ export const SlateView= widgets.DOMWidgetView.extend({
             disableDefaultDropDown: true,
             menu: [
                 {label:'Images', action:'ImageSelectDropDownSlateCmd'},
-                {label:'Catalogs', action:'IrsaCatalogDropDown'},
+                {label:'TAP/Table Searches', action: 'MultiTableSearchCmd'},
                 {label:'Charts', action:'ChartSelectDropDownCmd'},
                 {label:'Upload', action: 'FileUploadDropDownCmd'},
             ],

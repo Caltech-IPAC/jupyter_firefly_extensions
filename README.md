@@ -14,7 +14,6 @@ This extension adds the following features to JupyterLab:
   - Start the full Firefly viewer in a tab.
   - Use `FireflyClient` in a Python notebook to start Firefly in a tab and send data
   (tables, images, charts) to it using the `FireflyClient` API
-  - There are several widgets (images, tables, charts) that can be used in a notebook
   - The `SlateWidget` is a full Firefly viewer widget that provides a `FireflyClient` instance to embed a full Firefly in a notebook as a widget
 
 
@@ -23,11 +22,9 @@ This extension adds the following features to JupyterLab:
 
 * JupyterLab ^0.35.1
 * nodejs
-* ipywidgets ^7.0.0
 * astropy ^3.0.0
 * firefly_client ^2.1.1
 
-The first four prerequisites can be installed with `conda install jupyterlab nodejs ipywidgets astropy`.
 The `firefly_client` package can be installed with `pip install firefly_client`.
 
 ### _Very Important_: first setup the Firefly URL - 3 ways
@@ -62,11 +59,8 @@ _Or_
 
 ### Install
 
-To use any of the widgets in this package you must install the jupyter widget manager (`@jupyter-widgets/jupyterlab-manager`)
-
 ```bash
 pip install firefly_client
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
 jupyter labextension install jupyter_firefly_extensions
 pip install jupyter_firefly_extensions
 jupyter serverextension enable --py jupyter_firefly_extensions
@@ -82,7 +76,6 @@ and then do `pip install -e .` from inside its directory.
 
 _Then:_
 ```bash
-jupyter labextension install @jupyter-widgets/jupyterlab-manager --no-build
 git clone https://github.com/Caltech-IPAC/jupyter_firefly_extensions
 cd jupyter_firefly_extensions
 jupyter labextension install . --no-build
@@ -103,7 +96,6 @@ jupyter serverextension enable --py jupyter_firefly_extensions
 
 ### To remove extensions:
 ```bash
-jupyter labextension uninstall @jupyter-widgets/jupyterlab-manager --no-build
 jupyter labextension uninstall jupyter_firefly_extensions
 jupyter serverextension disable --py jupyter_firefly_extensions
 pip uninstall jupyter_firefly_extensions
@@ -116,8 +108,3 @@ The `examples` directory has several example notebooks to demonstrate the extens
  - `slate-demo-explicit.ipynb`, `slate-demo-explicit2.ipynb` - demonstrates
     opening a Firefly tab and sending data to it with the `FireflyClient` python API
  - `slate-widget-demo.ipnb` - simple demo of the Firefly slate widget
- - Three example demoing the images, tables, and charts widgets
-     - `Image Colorbar Test.ipynb`
-     - `Image Zoom and Pan Test.ipynb`
-     - `Images and Tables.ipynb`
-`
