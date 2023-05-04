@@ -53,9 +53,15 @@ package_data = {
     ]
 }
 
+name = "jupyter_firefly_extensions"
+include_package_data = True
 data_files = expand_data_files([
     ('share/jupyter/nbextensions/jupyter_firefly_extensions', [pjoin(nbextension, '*.js*')]),
-    ('share/jupyter/lab/extensions', [pjoin(labextension, '*.tgz')])
+    ('share/jupyter/lab/extensions', [pjoin(labextension, '*.tgz')]),
+    (
+        "etc/jupyter/jupyter_server_config.d",
+        ["jupyter-config/jupyter_server_config.d/jupyter_firefly_extensions.json"]
+    )
 ])
 
 
