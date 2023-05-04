@@ -152,6 +152,9 @@ def load_jupyter_server_extension(nb_server_app):
     page_config['fireflyChannel'] = channel
     logger.info('firefly URL: {}'.format(url))
     logger.info('firefly Channel: {}'.format(channel))
+    # added next two lines because logger does not seem to work JL 3.5
+    print('firefly URL: {}'.format(url))
+    print('firefly Channel: {}'.format(channel))
     os.environ['fireflyChannelLab'] = channel
     os.environ['fireflyURLLab'] = url
     os.environ['fireflyLabExtension'] = 'true'
@@ -165,3 +168,6 @@ def load_jupyter_server_extension(nb_server_app):
         (send_pattern, SendToFireflyHandler, {'notebook_dir': nb_server_app.notebook_dir, 'firefly_url': url}),
         (get_ff_data_pattern, GetFireflyUrlData, {})
     ])
+
+
+_load_jupyter_server_extension = load_jupyter_server_extension
