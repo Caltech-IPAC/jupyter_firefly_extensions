@@ -8,6 +8,7 @@ build/
 dist/
 *.iml
 lib/
+**/.ipynb_checkpoints/
 
 # Compiled javascript
 jupyter_fits_viewer/__pycache__/
