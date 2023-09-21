@@ -20,7 +20,7 @@ This extension adds the following features to JupyterLab:
 
 ## Prerequisites
 
-* JupyterLab ^0.35.1
+* JupyterLab ^0.35.1,<4
 * nodejs
 * astropy ^3.0.0
 * firefly_client ^2.1.1
@@ -60,8 +60,13 @@ _Or_
 ### Install
 
 ```bash
+# install firefly_client package required to communicate with a firefly server from python
 pip install firefly_client
+
+# install client-side component of this extension from npm and enable it
 jupyter labextension install jupyter_firefly_extensions
+
+# install server-side component of this extension from pypi and enable the server extension manually
 pip install jupyter_firefly_extensions
 jupyter serverextension enable --py jupyter_firefly_extensions
 ```
@@ -78,8 +83,12 @@ _Then:_
 ```bash
 git clone https://github.com/Caltech-IPAC/jupyter_firefly_extensions
 cd jupyter_firefly_extensions
+
+# client-side component
 jupyter labextension install . --no-build
-jupyter lab build
+jupyter lab build  # required because using source extension
+
+# server-side component
 pip install -e .
 jupyter serverextension enable --py jupyter_firefly_extensions
 ```
@@ -107,4 +116,12 @@ The `examples` directory has several example notebooks to demonstrate the extens
 
  - `slate-demo-explicit.ipynb`, `slate-demo-explicit2.ipynb` - demonstrates
     opening a Firefly tab and sending data to it with the `FireflyClient` python API
- - `slate-widget-demo.ipnb` - simple demo of the Firefly slate widget
+ - Other notebooks demonstrate capabilites of widgets which are no longer supported, so they won't work.
+
+
+Besides this, you can also use this extension to display fits images. In the file browser of jupyter lab, simply clicking on a `.fits`  file will show the image in a new tab.
+
+
+
+### Troubleshooting
+If you are using a local Firefly server and facing issues with rendering images, check the console for an error message about being unable to load 'firefly-thread.worker.js'. If that's the case, you can clean your existing Firefly build using `gradle clean` and then build and deploy it in the development environment (instead of the local one, i.e., the default) by using `gradle -Penv=dev firefly:bAD`. Then, reload the Jupyter Lab browser tab (and empty the cache). You shouldn't see that console error anymore and the images should render correctly.
