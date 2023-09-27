@@ -2,8 +2,7 @@
 requires = [
     "hatchling>=1.5.0",
     "jupyterlab>=4.0.0,<5",
-    "hatch-nodejs-version",
-    "firefly_client>=2.1.1"
+    "hatch-nodejs-version>=0.3.2"
 ]
 build-backend = "hatchling.build"
 
@@ -30,7 +29,8 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "jupyter_server>=2.0.1,<3"
+    "jupyter_server>=2.0.1,<3",
+    "firefly_client>=2.1.1"
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
