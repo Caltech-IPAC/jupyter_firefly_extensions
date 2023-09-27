@@ -1,5 +1,5 @@
 import b64toBlob from 'b64-to-blob';
-import {buildURLErrorHtml, findFirefly, makeLabEndpoint} from './FireflyCommonUtils.js';
+import {buildURLErrorHtml, findFirefly, makeLabEndpoint} from 'FireflyCommonUtils.js';
 import { Widget } from '@lumino/widgets';
 import { ABCWidgetFactory, DocumentWidget} from '@jupyterlab/docregistry';
 import { PageConfig} from '@jupyterlab/coreutils';

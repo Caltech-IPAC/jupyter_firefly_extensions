@@ -1,5 +1,9 @@
 import { Widget } from '@lumino/widgets';
-import {findFirefly} from './FireflyCommonUtils.js';
+import { ICommandPalette, IFrame } from '@jupyterlab/apputils';
+import { JupyterFrontEnd } from '@jupyterlab/application';
+import { ILauncher } from '@jupyterlab/launcher';
+
+import { findFirefly } from './FireflyCommonUtils.js';
 
 
 let widgetId;
@@ -11,25 +15,12 @@ let openWidgets= {};
  * Extension can be started in two ways.
  * 1. as a jupyter command
  * 2. firefly_client sending a 'StartLabWindow' action
- * @param app
+ * @param {JupyterFrontEnd} app
+ * @param {ICommandPalette} palette
+ * @param {ILauncher | null} launcher
  */
-export function activateSlateCommandExt(app) {
-    const slateCmd= 'firefly:open slate';
-
-                // this is a hack could not get the command palette like the documention showed
-    const palette= app._pluginMap["@jupyterlab/apputils-extension:palette"].service._palette;
-    palette.addItem({command: slateCmd, category: 'Firefly'});
-
-    app.commands.addCommand(slateCmd, {
-        label: 'Open Firefly',
-        isEnabled: () => true,
-        execute: () => {
-            const id= 'slate-'+ widgetCnt;
-            widgetCnt++;
-            openSlateMulti(app, id, true)
-        }
-    });
-
+export function activateSlateCommandExt(app, palette, launcher) {
+    console.log('slate extension is activated!');
 
     findFirefly().then( (ffConfig) => {
         const {firefly}= ffConfig;
@@ -42,6 +33,24 @@ export function activateSlateCommandExt(app) {
         });
 
     });
+
+    // for starting extension as a jupyter command -----------
+    const command = 'firefly:open slate';
+    const category = 'Firefly';
+
+    app.commands.addCommand(command, {
+        label: 'Open Firefly',
+        //   caption: '',
+        isEnabled: () => true,
+        execute: () => {
+            const id= 'slate-'+ widgetCnt;
+            widgetCnt++;
+            openSlateMulti(app, id, true);
+        }
+    });
+
+    palette.addItem({ command, category });
+    if (launcher) launcher.add({ command, category});
 }
 
 function openSlateMulti(app, id, activate) {
