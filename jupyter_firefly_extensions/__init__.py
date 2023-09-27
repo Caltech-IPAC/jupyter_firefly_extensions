@@ -5,7 +5,7 @@ from .handlers import setup_handlers
 def _jupyter_labextension_paths():
     return [{
         "src": "labextension",
-        "dest": "@jupyter_firefly_extensions"
+        "dest": "jupyter_firefly_extensions"
     }]
 
 

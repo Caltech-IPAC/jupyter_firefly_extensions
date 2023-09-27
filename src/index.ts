@@ -3,6 +3,8 @@ import {
   ILayoutRestorer
 } from '@jupyterlab/application';
 import { IDocumentManager } from '@jupyterlab/docmanager';
+import { ICommandPalette } from '@jupyterlab/apputils';
+import { ILauncher } from '@jupyterlab/launcher';
 
 
 import {activateSlateCommandExt} from './SlateCommandExt.js';
@@ -12,11 +14,12 @@ import {activateSlateCommandExt} from './SlateCommandExt.js';
  * Initialization data for the extension.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
-  id: '@jupyter_firefly_extensions:showSlate',
+  id: 'jupyter_firefly_extensions:showSlate',
   description:
     'Show firefly slate',
   autoStart: true,
-  requires: [IDocumentManager,  ILayoutRestorer],
+  optional: [ILauncher],
+  requires: [IDocumentManager, ILayoutRestorer, ICommandPalette],
   activate: activateSlateCommandExt
 };
 
