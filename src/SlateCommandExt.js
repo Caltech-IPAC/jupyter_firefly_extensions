@@ -35,12 +35,12 @@ export function activateSlateCommandExt(app, palette, launcher) {
     });
 
     // for starting extension as a jupyter command -----------
-    const command = 'firefly:open slate';
+    const command = 'firefly:open-slate';
     const category = 'Firefly';
 
     app.commands.addCommand(command, {
         label: 'Open Firefly',
-        //   caption: '',
+        caption: 'Open Firefly',
         isEnabled: () => true,
         execute: () => {
             const id= 'slate-'+ widgetCnt;

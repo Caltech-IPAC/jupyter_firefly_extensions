@@ -1,8 +1,4 @@
-import {
-  JupyterFrontEndPlugin,
-  ILayoutRestorer
-} from '@jupyterlab/application';
-import { IDocumentManager } from '@jupyterlab/docmanager';
+import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 
@@ -18,8 +14,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description:
     'Show firefly slate',
   autoStart: true,
+  requires: [ICommandPalette],
   optional: [ILauncher],
-  requires: [IDocumentManager, ILayoutRestorer, ICommandPalette],
   activate: activateSlateCommandExt
 };
 
