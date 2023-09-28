@@ -1,22 +1,30 @@
-import { JupyterFrontEndPlugin } from '@jupyterlab/application';
+import { JupyterFrontEndPlugin, ILayoutRestorer } from '@jupyterlab/application';
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 
 
-import {activateSlateCommandExt} from './SlateCommandExt.js';
-
+import { activateSlateCommandExt } from './SlateCommandExt.js';
+import { activateFitsViewerExt } from './FitsViewerExt.js';
 
 /**
- * Initialization data for the extension.
+ * Initialization data for each extension.
  */
-const plugin: JupyterFrontEndPlugin<void> = {
+const showSlateExt: JupyterFrontEndPlugin<void> = {
   id: 'jupyter_firefly_extensions:showSlate',
-  description:
-    'Show firefly slate',
+  description: 'Show firefly slate',
   autoStart: true,
   requires: [ICommandPalette],
   optional: [ILauncher],
   activate: activateSlateCommandExt
 };
 
-export default plugin; // TODO: export list when adding fits viewer plugin too
+const fitsViewerExt: JupyterFrontEndPlugin<void> = {
+  id: 'jupyter_firefly_extensions:fitsviewer',
+  description: 'View a FITS file',
+  autoStart: true,
+  requires: [ILayoutRestorer],
+  activate: activateFitsViewerExt
+};
+
+// More than one extension/plugin can be exported as a list
+export default [showSlateExt, fitsViewerExt];

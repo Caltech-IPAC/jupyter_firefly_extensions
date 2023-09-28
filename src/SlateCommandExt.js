@@ -20,8 +20,6 @@ let openWidgets= {};
  * @param {ILauncher | null} launcher
  */
 export function activateSlateCommandExt(app, palette, launcher) {
-    console.log('slate extension is activated!');
-
     findFirefly().then( (ffConfig) => {
         const {firefly}= ffConfig;
         firefly.util.addActionListener(['StartLabWindow'], (action,state) => {
