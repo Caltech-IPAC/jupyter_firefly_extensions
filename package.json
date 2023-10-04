@@ -1,6 +1,6 @@
 {
   "name": "jupyter_firefly_extensions",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Jupyterlab extensions for rendering FITS and displaying tables, images, & charts with Firefly",
   "keywords": [
     "jupyter",
