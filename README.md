@@ -46,9 +46,15 @@ _Or_
 
  * Use the environment variable in the shell where you start jupyter lab
 
-   ```
-   export FIREFLY_URL=http://localhost:8080/firefly
-   ```
+    in bash:
+      ```
+      export FIREFLY_URL=http://localhost:8080/firefly
+      ```
+    
+    in tcsh:
+      ```
+      setenv FIREFLY_URL http://localhost:8080/firefly
+      ```
 
 **where the URL points to a Firefly server.**
 

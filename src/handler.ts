@@ -1,3 +1,9 @@
+/**
+ * This is JupyterLab's recommended way of creating handlers for extension with server.
+ * We're currently implementing our own handlers in ./*.js files, so this file is not being used
+ * but might be useful in the future when we adopt it and switch to TS completely. 
+ */
+
 import { URLExt } from '@jupyterlab/coreutils';
 
 import { ServerConnection } from '@jupyterlab/services';
