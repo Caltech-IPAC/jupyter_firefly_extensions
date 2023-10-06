@@ -23,6 +23,8 @@ These extensions add the following features to JupyterLab:
 
 * astropy ^3.0.0 - (optional) used for convenience in example notebooks.
 
+* nodejs ^18.0.0 - only needed if you're doing [development install](#development-install)
+
 
 ### _Very Important_: first setup the Firefly URL - 3 ways
 
@@ -76,6 +78,8 @@ _First:_
 If developing `firefly_client`, be sure to clone the `firefly_client` repository
 (https://github.com/Caltech-IPAC/firefly_client)
 and then do `pip install -e .` from inside its directory.
+
+Make sure you have nodejs >=18.0.0 installed on your system or virtual environment. It's required for building TS/JS source. In conda environment, you can install it using `conda install nodejs`
 
 _Then:_
 ```bash
