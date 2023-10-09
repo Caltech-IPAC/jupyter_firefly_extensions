@@ -1,8 +1,0 @@
-{
-    "ServerApp": {
-        "jpserver_extensions": {
-            "jupyter_firefly_extensions": true
-        }
-    }
-}
-

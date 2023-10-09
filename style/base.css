@@ -1,0 +1,10 @@
+/*
+    See the JupyterLab Developer Guide for useful CSS Patterns:
+
+    https://jupyterlab.readthedocs.io/en/stable/developer/css.html
+*/
+
+.rootStyle {
+    /* to prevent text color becoming white if dark theme is enabled in JupyterLab */
+    color: initial;
+}
