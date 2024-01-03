@@ -2,8 +2,10 @@ import { Widget } from '@lumino/widgets';
 import { ICommandPalette, IFrame } from '@jupyterlab/apputils';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { ILauncher } from '@jupyterlab/launcher';
+import { LabIcon } from '@jupyterlab/ui-components';
 
 import { findFirefly } from './FireflyCommonUtils.js';
+import fireflyIconStr from '../style/fftools-logo.svg';
 
 
 let widgetId;
@@ -35,10 +37,15 @@ export function activateSlateCommandExt(app, palette, launcher) {
     // for starting extension as a jupyter command -----------
     const command = 'firefly:open-slate';
     const category = 'Firefly';
+    const icon = new LabIcon({
+        name: 'jupyter_firefly_extensions:firefly-icon',
+        svgstr: fireflyIconStr
+      }); 
 
     app.commands.addCommand(command, {
         label: 'Open Firefly',
         caption: 'Open Firefly',
+        icon: icon,
         isEnabled: () => true,
         execute: () => {
             const id= 'slate-'+ widgetCnt;
