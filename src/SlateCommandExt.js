@@ -110,11 +110,11 @@ export class SlateRootWidget extends Widget {
         this.title.label= 'Firefly: '+ id;
         this.title.closable= true;
         findFirefly().then( (ffConfig) => {
-            this.startViewer(ffConfig.firefly,id);
+            this.startViewer(ffConfig.firefly, id, ffConfig.fireflyURL);
         } );
     }
 
-    startViewer(firefly, id) {
+    startViewer(firefly, id, fireflyURL) {
         const {util,action}= firefly;
         const props=  {
             div: id,
@@ -131,6 +131,13 @@ export class SlateRootWidget extends Widget {
         ];
         if (!firefly.originalAppProps) {
             props.menu= fallbackMenu;
+        }
+        if (fireflyURL.endsWith('irsaviewer')) {
+            // make icon file path absolute, otherwise it won't be found
+            const originalAppIconProp = firefly?.originalAppProps?.appIcon;
+            if (originalAppIconProp) props.appIcon = fireflyURL + '/' + originalAppIconProp;
+            // resize it to fit in its parent container
+            props.bannerLeftStyle = {display: 'flex', marginTop: 'unset'};
         }
         action.dispatchApiToolsView(true,false);
         this.controlApp= util.startAsAppFromApi(id, props);
