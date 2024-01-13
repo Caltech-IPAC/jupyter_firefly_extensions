@@ -15,11 +15,26 @@ Starting v4.0.0 jupyter_firefly_extensions is distributed as a [prebuilt Jupyter
         ```
    - check it: `ls dist` should show two files a `.tar.gz` file and a `.whl` file
 5. _Optional_ - At this point you could do an optional test installation ([see below](#optional-test-installation))
-6. Upload to PYPI  
-    ```bash
-    pip install --upgrade twine
-    twine upload dist/*
-    ```
+
+6. Upload to PYPI
+   1. _One-time-only auth setup:_ Login to pypi and then in your account settings, go to the API tokens section and select "Add API token". Give it any name and select scope to project:jupyter-firefly-extensions and create token. To save this token for later uses, make sure to create a `$HOME/.pypirc` file (or update it if you already have it) with the following:
+      ```ini
+      [distutils]
+      index-servers =
+         jupyter-firefly-extensions
+
+      [jupyter-firefly-extensions]
+      repository = https://upload.pypi.org/legacy/
+      username = __token__
+      password = pypi-token-you-created
+      ```
+
+   2. Upload dist to pypi using twine (with the auth setup in previous step)
+      ```bash
+      pip install --upgrade twine
+      twine upload dist/* --repository jupyter-firefly-extensions
+      ```
+
 7. If any files were edited (i.e `package.json`):
    - `git commit -a`
    - `git push origin master`
