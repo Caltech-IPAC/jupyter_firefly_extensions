@@ -1,4 +1,5 @@
 import {initFirefly} from 'firefly-api-access';
+import { ServerConnection } from '@jupyterlab/services';
 
 
 let cachedLoc;
@@ -21,13 +22,16 @@ export async function findFirefly()  {
     if (cachedFindFireflyResult) return cachedFindFireflyResult;
 
     try {
-        if (!cachedLoc) cachedLoc= await (await fetch(ffLocURL, fetchOptions)).json();
+        const settings = ServerConnection.makeSettings();
+        console.log(ffLocURL, settings);
+        if (!cachedLoc) cachedLoc= await (await ServerConnection.makeRequest(ffLocURL, fetchOptions, settings)).json();
 
         const {fireflyURL='http://localhost:8080/firefly', fireflyChannel:channel}= cachedLoc;
         if (!window.firefly?.initialized) window.firefly= {...window.firefly, wsch:channel};
         if (!window.getFireflyAPI) window.getFireflyAPI= initFirefly(fireflyURL);
         const firefly= await window.getFireflyAPI();
         cachedFindFireflyResult= {fireflyURL, channel, firefly};
+        console.log(cachedFindFireflyResult);
         return cachedFindFireflyResult;
     }
     catch (e) {
