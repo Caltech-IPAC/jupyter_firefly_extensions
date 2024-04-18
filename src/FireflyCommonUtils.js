@@ -22,25 +22,33 @@ export async function findFirefly()  {
     if (cachedFindFireflyResult) return cachedFindFireflyResult;
 
     try {
+        // request the config from server at /lab/fireflyLocation (see handlers.py)
         const settings = ServerConnection.makeSettings();
-        console.log(ffLocURL, settings);
         if (!cachedLoc) cachedLoc= await (await ServerConnection.makeRequest(ffLocURL, fetchOptions, settings)).json();
 
-        const {fireflyURL='http://localhost:8080/firefly', fireflyChannel:channel}= cachedLoc;
+        // make sure that response of above request contains non-empty fireflyURL
+        const {fireflyURL, fireflyChannel:channel}= cachedLoc;
+        if (!fireflyURL) throw new Error(`fireflyURL couldn't be retrieved from ${ffLocURL}`);
+
+        // load firefly API from fireflyURL at /lab (window)
+        // (CORS errors might happen here if headers aren't set up correctly, maybe due to caching)
         if (!window.firefly?.initialized) window.firefly= {...window.firefly, wsch:channel};
         if (!window.getFireflyAPI) window.getFireflyAPI= initFirefly(fireflyURL);
         const firefly= await window.getFireflyAPI();
+
+        // resolve Promise
         cachedFindFireflyResult= {fireflyURL, channel, firefly};
-        console.log(cachedFindFireflyResult);
+        console.log('Firefly loaded successfully\n', cachedFindFireflyResult);
         return cachedFindFireflyResult;
     }
     catch (e) {
+        // log information about error(s) before rejecting Promise
         console.group('Firefly Load Failed');
         console.log('findFirefly: Could not determine firefly location or load firefly, call failed');
-        console.log(`find firefly url: ${ffLocURL}`);
-        if (cachedLoc) console.log(`firefly url: ${cachedLoc.fireflyURL} channel: ${cachedLoc.channel}`);
+        if (cachedLoc) console.log(`firefly url: ${cachedLoc.fireflyURL} channel: ${cachedLoc.fireflyChannel}`);
         console.log(e);
         console.groupEnd('Firefly Load Failed');
+        throw e;  // to let promise reject
     }
 
 }

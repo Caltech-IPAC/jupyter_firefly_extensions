@@ -105,7 +105,7 @@ def setup_handlers(server_app):
     """
     global firefly_config
     web_app = server_app.web_app
-    config_url = server_app.config.get('Firefly', {}).get('url', '')
+    config_url = server_app.config.get('Firefly', {}).get('url', 'http://localhost:8080/firefly')
     url = None
     if 'FIREFLY_URL' in os.environ:
         url = os.environ['FIREFLY_URL']
