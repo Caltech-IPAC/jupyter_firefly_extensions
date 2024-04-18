@@ -25,10 +25,18 @@ These extensions add the following features to JupyterLab:
 
 * nodejs ^18.0.0 - only needed if you're doing [development install](#development-install)
 
+If you have conda installed and are setting up a fresh environment, you can use:
+```bash
+conda create -n jl-ff-ext -c conda-forge python jupyterlab firefly_client astropy
+conda activate jl-ff-ext
+```
+
 
 ### _Very Important_: first setup the Firefly URL - 3 ways
 
- * Add the following line to your `~/.jupyter/jupyter_notebook_config.py`
+You must provide **URL to a Firefly server** before running jupyter_firefly_extensions using ANY of the following ways:
+
+ * Add the following line to your `~/.jupyter/jupyter_config.py`
 
    ```python
    c.Firefly.url = 'http://localhost:8080/firefly'
@@ -36,7 +44,7 @@ These extensions add the following features to JupyterLab:
 
 _Or_
 
- * Add the following line to your `~/.jupyter/jupyter_notebook_config.json` under the root object.
+ * Add the following line to your `~/.jupyter/jupyter_config.json` under the root object.
 
    ```json
    "Firefly": {
@@ -58,11 +66,13 @@ _Or_
       setenv FIREFLY_URL http://localhost:8080/firefly
       ```
 
-**where the URL points to a Firefly server.**
-
+_Note:_ If your configuration is set in more than one way as described above, precedence order is:
+environment variable > jupyter_config.json > jupyter_config.py
 
 
 ## Installation
+
+In your environment with the prerequisites met,
 
 ```bash
 pip install jupyter_firefly_extensions
@@ -95,8 +105,11 @@ jupyter labextension develop . --overwrite
 # Enable the server extension
 jupyter server extension enable jupyter_firefly_extensions
 
-# Rebuild extension TS/JS source each time you make a change
+# Build extension TS/JS source
 jlpm run build
+
+# Alternatively, watch TS/JS source so that changes in it reflect automatically on lab
+jlpm watch
 ```
 
 
