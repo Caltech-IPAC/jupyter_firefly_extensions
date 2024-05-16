@@ -26,8 +26,8 @@ export async function findFirefly()  {
         const settings = ServerConnection.makeSettings();
         if (!cachedLoc) cachedLoc= await (await ServerConnection.makeRequest(ffLocURL, fetchOptions, settings)).json();
 
-        // make sure that response of above request contains non-empty fireflyURL
-        const {fireflyURL, fireflyChannel:channel}= cachedLoc;
+        // make sure that response of the above request contains non-empty fireflyURL
+        const {fireflyURL, fireflyChannel:channel, fireflyHtmlFile}= cachedLoc;
         if (!fireflyURL) throw new Error(`fireflyURL couldn't be retrieved from ${ffLocURL}`);
 
         // load firefly API from fireflyURL at /lab (window)
@@ -37,7 +37,7 @@ export async function findFirefly()  {
         const firefly= await window.getFireflyAPI();
 
         // resolve Promise
-        cachedFindFireflyResult= {fireflyURL, channel, firefly};
+        cachedFindFireflyResult= {fireflyURL, channel, firefly, fireflyHtmlFile};
         console.log('Firefly loaded successfully\n', cachedFindFireflyResult);
         return cachedFindFireflyResult;
     }
@@ -66,7 +66,7 @@ export function buildURLErrorHtml(e) {
 export function makeLabEndpoint(endPoint, searchParams) {
     const {origin,pathname}= new URL(window.document.location.href);
     const originURL= origin + pathname;
-    const start= originURL.substring(0, originURL.lastIndexOf('lab'))
+    const start= originURL.substring(0, originURL.lastIndexOf('lab'));
     const slashMaybe= start.endsWith('/') ? '' : '/';
-    return `${start}${slashMaybe}${endPoint}${searchParams?'?'+searchParams.toString():''}`
+    return `${start}${slashMaybe}${endPoint}${searchParams?'?'+searchParams.toString():''}`;
 }

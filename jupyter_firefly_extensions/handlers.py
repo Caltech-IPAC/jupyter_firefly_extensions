@@ -101,21 +101,26 @@ def setup_handlers(server_app):
     Called when the extension is loaded.
 
     Args:
-        nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
+        server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
     global firefly_config
     web_app = server_app.web_app
     config_url = server_app.config.get('Firefly', {}).get('url', 'http://localhost:8080/firefly')
     url = None
+    html_file = None
     if 'FIREFLY_URL' in os.environ:
         url = os.environ['FIREFLY_URL']
     if not url:
         url = config_url
 
+    if 'FIREFLY_HTML' in os.environ:
+        html_file = os.environ['FIREFLY_HTML']
+
     web_app.settings['fireflyURL'] = url
+    web_app.settings['fireflyHtmlFile'] = html_file
 
     # page_config = web_app.settings.setdefault('page_config_data', dict())
-    page_config = {'fireflyLabExtension': 'true', 'fireflyURL': url}
+    page_config = {'fireflyLabExtension': 'true', 'fireflyURL': url, 'fireflyHtmlFile': html_file}
     # for key,val in web_app.settings.items():
     #     print('{} => {}'.format(key,val))
 
@@ -124,12 +129,15 @@ def setup_handlers(server_app):
     channel = 'ffChan-{}-{}-{}'.format(hostname, int(timestamp), random.randint(1, 100))
     page_config['fireflyChannel'] = channel
     logger.info('firefly URL: {}'.format(url))
+    logger.info('firefly HTML File: {}'.format('not defined' if not html_file else html_file))
     logger.info('firefly Channel: {}'.format(channel))
-    # added next two lines because logger does not seem to work JL 3.5
+    # added the next three lines because logger does not seem to work JL 3.5
     print('firefly URL: {}'.format(url))
     print('firefly Channel: {}'.format(channel))
+    print('firefly HTML File: {}'.format('not defined' if not html_file else html_file))
     os.environ['fireflyChannelLab'] = channel
     os.environ['fireflyURLLab'] = url
+    os.environ['fireflyHtmlFile'] = '' if not html_file else html_file
     os.environ['fireflyLabExtension'] = 'true'
     firefly_config = dict(page_config)
 
