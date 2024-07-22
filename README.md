@@ -27,7 +27,7 @@ These extensions add the following features to JupyterLab:
 
 If you have conda installed and are setting up a fresh environment, you can use:
 ```bash
-conda create -n jl-ff-ext -c conda-forge python jupyterlab firefly_client astropy
+conda create -n jl-ff-ext -c conda-forge python jupyterlab firefly-client astropy
 conda activate jl-ff-ext
 ```
 
@@ -75,7 +75,7 @@ environment variable > jupyter_config.json > jupyter_config.py
 In your environment with the prerequisites met,
 
 ```bash
-pip install jupyter_firefly_extensions
+pip install jupyter-firefly-extensions
 ```
 
 Open JupyterLab (with `jupyter lab`) to start using these extensions - see [examples](#examples) to learn how.
