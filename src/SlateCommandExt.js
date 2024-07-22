@@ -3,6 +3,7 @@ import { ICommandPalette } from '@jupyterlab/apputils';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
+import { set } from 'lodash';
 
 import { findFirefly } from './FireflyCommonUtils.js';
 import fireflyIconStr from '../style/fftools-logo.svg';
@@ -110,11 +111,10 @@ export class SlateRootWidget extends Widget {
             props.menu= fallbackMenu;
         }
         if (fireflyURL.endsWith('irsaviewer')) {
-            // make icon file path absolute, otherwise it won't be found
-            const originalAppIconProp = firefly?.originalAppProps?.appIcon;
-            if (originalAppIconProp) props.appIcon = fireflyURL + '/' + originalAppIconProp;
-            // resize it to fit in its parent container
-            props.bannerLeftStyle = {display: 'flex', marginTop: 'unset'};
+            // unset the appIcon styles that irsaviewer applies for its double banner layout
+            set(props,'slotProps.banner.slotProps.tabs.pl', 0);
+            set(props,'slotProps.banner.slotProps.icon.style.marginTop', 0);
+            set(props,'slotProps.banner.slotProps.icon.sx.height', 40);
         }
         action.dispatchApiToolsView(true,false);
         this.controlApp= util.startAsAppFromApi(id, props);
