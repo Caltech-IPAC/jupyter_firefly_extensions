@@ -118,7 +118,10 @@ jlpm watch
  - `jupyter server extension list` - show a list of server extensions
  - `jupyter lab extension list` - show a list of lab extensions
  - `jupyter lab` - run jupyter lab
- - `jlpm <any yarn command>` - JupyterLab-provided, locked version of the yarn
+ - `jlpm <any yarn command>` - JupyterLab-provided, locked version of the yarn 
+    
+    > Note: AVOID using `yarn <yarn command>` because it may use globally installed yarn, which can have a different version than jlpm (say, v1 instead of v3) causing package.json installation to break.
+
 
 
 ### To remove extension:
@@ -140,4 +143,6 @@ Besides this, you can also use this extension to display fits images. In the fil
 
 
 ## Troubleshooting
-If you are using a local Firefly server and facing issues with rendering images, check the console for an error message about being unable to load 'firefly-thread.worker.js'. If that's the case, you can clean your existing Firefly build using `gradle clean` and then build and deploy it in the development environment (instead of the local one, i.e., the default) by using `gradle -Penv=dev firefly:bAD`. Then, reload the Jupyter Lab browser tab (and empty the cache). You shouldn't see that console error anymore and the images should render correctly.
+- If you are using a local Firefly server and facing issues with rendering images, check the console for an error message about being unable to load 'firefly-thread.worker.js'. If that's the case, you can clean your existing Firefly build using `gradle clean` and then build and deploy it in the development environment (instead of the local one, i.e., the default) by using `gradle -Penv=dev firefly:bAD`. Then, reload the Jupyter Lab browser tab (and empty the cache). You shouldn't see that console error anymore and the images should render correctly.
+
+- If `jlpm run build` (or `jlpm watch`) fails due to missing/incompatible packages, run `jlpm` (equivalent of `yarn`) to update/resolve dependencies as per package.json. If it updates `yarn.lock`, make sure to commit and push that.
