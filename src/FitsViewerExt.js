@@ -15,7 +15,7 @@ const CLASS_NAME = 'jp-OutputWidgetFITS';
 
 let idCounter=0;
 
-const FACTORY = 'FITS-IMAGE';
+const FACTORY = 'Firefly (Image Viewer)';
 
 
 const fitsIFileType= {
