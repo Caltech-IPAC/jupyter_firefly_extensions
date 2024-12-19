@@ -114,7 +114,8 @@ export class SlateRootWidget extends Widget {
             // unset the appIcon styles that irsaviewer applies for its double banner layout
             set(props,'slotProps.banner.slotProps.tabs.pl', 0);
             set(props,'slotProps.banner.slotProps.icon.style.marginTop', 0);
-            set(props,'slotProps.banner.slotProps.icon.sx.height', 40);
+            set(props,'slotProps.banner.slotProps.icon.sx', 
+                {'.MuiSvgIcon-root': {height: '3rem', width: '3rem', pl: 0}});
         }
         action.dispatchApiToolsView(true,false);
         this.controlApp= util.startAsAppFromApi(id, props);
