@@ -17,7 +17,7 @@ These extensions add the following features to JupyterLab:
 
 * JupyterLab ^4.0.0 - where these extensions will run. Check past releases if you are using JupyterLab<4.
 
-* firefly_client ^2.1.1 - can be installed with `pip install firefly-client`.
+* firefly_client ^3.3.0 - can be installed with `pip install firefly-client`.
 
 * Firefly server - you can run it locally via a Firefly Docker image obtained from https://hub.docker.com/r/ipac/firefly.
 
