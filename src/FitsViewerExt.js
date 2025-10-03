@@ -1,28 +1,20 @@
 import b64toBlob from 'b64-to-blob';
-import {buildURLErrorHtml, findFirefly, makeLabEndpoint} from './FireflyCommonUtils.js';
+import { buildURLErrorHtml, findFirefly, makeLabEndpoint } from './FireflyCommonUtils.js';
 import { Widget } from '@lumino/widgets';
-import { ABCWidgetFactory, DocumentWidget} from '@jupyterlab/docregistry';
-import { PageConfig} from '@jupyterlab/coreutils';
+import { ABCWidgetFactory, DocumentWidget } from '@jupyterlab/docregistry';
 
 
 export const FITS_MIME_TYPE = 'application/fits';
-
-
-/**
- * The class name added to the extension.
- */
-const CLASS_NAME = 'jp-OutputWidgetFITS';
+const CLASS_NAME = 'jp-OutputWidgetFITS'; // the class name added to the extension
+const FACTORY = 'Firefly (Image Viewer)';
 
 let idCounter=0;
 
-const FACTORY = 'Firefly (Image Viewer)';
 
-
-const fitsIFileType= {
+const fitsIFileType = {
     name: 'FITS',
     displayName: 'FITS file',
-    fileFormat: 'base64',  // TODO: try putting a null here to keep from loading file, the might be the answer
-                           // will need to check the JL version someway
+    fileFormat: null, // prevent client from auto-loading bytes; server path or on-demand upload handles it
     format: 'base64',
     mimeTypes: [FITS_MIME_TYPE],
     extensions: ['.fits']
@@ -34,29 +26,22 @@ const fitsIFileType= {
  * @param {ILayoutRestorer} restorer
  */
 export function activateFitsViewerExt(app, restorer) {
-    const namespace = 'firefly-imageviewer-widget';
-    const jlVersion= PageConfig.getOption('appVersion');
-    const vAry= jlVersion?.split('.').map( (x) => Number(x)) ?? [0,0,0];
+    if (!app.docRegistry.getFileType('FITS')) { //prevent duplicate registration of file type
+        app.docRegistry.addFileType(fitsIFileType);
+    }
 
-    // if Jupyter Lab version is 3.1 or greater then clear the fileFormat so it does not load the file on the client
-    // see - https://github.com/jupyterlab/jupyterlab/pull/7596
-    if (vAry[0] >=3 && vAry[1] >= 1) fitsIFileType.fileFormat= null;
-
-    app.docRegistry.addFileType(fitsIFileType);
     const factory = new ABCWidgetFactory({
         name: FACTORY,
-        modelName: 'base64',
-        // modelName: 'fits-model',
+        modelName: 'base64', // so that context.model.toString() returns base64 encoded file data
         fileTypes: ['FITS'],
         defaultFor: ['FITS'],
         readOnly: true
     });
-    factory.createNewWidget= createNewFitsViewerDocumentWidget;
+    factory.createNewWidget = createNewFitsViewerDocumentWidget;
     app.docRegistry.addWidgetFactory(factory);
 
-    factory.widgetCreated.connect((sender, widget) => {
+    factory.widgetCreated.connect((_sender, widget) => {
         const types = app.docRegistry.getFileTypesForPath(widget.context.path);
-
         if (types.length) {
             widget.title.iconClass = types[0].iconClass || '';
             widget.title.iconLabel = types[0].iconLabel || '';
@@ -69,12 +54,12 @@ export function activateFitsViewerExt(app, restorer) {
 
 
 export function createNewFitsViewerDocumentWidget(context) {
-    // instead of extending DocumentWidget like the example, just use it directly
-    return new DocumentWidget({ content:new FitsViewerWidget(context), context, reveal:true, toolbar:null });
+    // DocumentWidget wrapper (no toolbar, default save etc. needed for read-only viewer)
+    return new DocumentWidget({ content: new FitsViewerWidget(context), context, reveal: true, toolbar: null });
 }
 
 /**
- * A widget for rendering FITS.
+ * A widget for rendering a Firefly FITS Image Viewer.
  */
 export class FitsViewerWidget extends Widget {
     /**
@@ -82,18 +67,22 @@ export class FitsViewerWidget extends Widget {
      * @param context
      */
     constructor(context) {
-        super({ node: createNode(context._path) });
-        const useModel= window.firefly && window.firefly.jlExtUseModel || false;
+        super({ node: createNode(context.path) });
+        // jlExtUseModel flag controls whether to upload from JL client-side file "model"
+        // default is false to upload from JL server which is faster
+        const useModel = window?.firefly?.jlExtUseModel || false;
         this.addClass(CLASS_NAME);
-        this.filename= context._path;
+        this.filename = context.path;
         idCounter++;
-        this.plotId= `${this.filename}-${idCounter}`;
-        this.loaded= false;
+        this.plotId = `${this.filename}-${idCounter}`;
+        this.loaded = false;
         if (this.isDisposed) return;
-        this.renderModel(context,useModel).then(() => {
-        });
-        context.model.contentChanged.connect( this.renderModel, this );
-        context.fileChanged.connect( this.renderModel, this );
+
+        // Initial render
+        void this.renderModel(context, useModel);
+        // Re-render if content or file changes (e.g., save-as, rename)
+        context.model.contentChanged.connect(this.renderModel, this);
+        context.fileChanged.connect(this.renderModel, this);
     }
 
     /**
@@ -102,105 +91,139 @@ export class FitsViewerWidget extends Widget {
      * @param useModelFirst
      * @return {Promise<{firefly: Object, channel: string, fireflyURL: string}>}
      */
-    renderModel(context, useModelFirst) {
-
+    async renderModel(context, useModelFirst) {
         if (this.isDisposed) return;
 
+        // If already loaded, just activate the existing plot view
         if (this.loaded) {
-            return findFirefly()
-                .then( (ffConfig) => ffConfig.firefly.action.dispatchChangeActivePlotView(this.plotId) );
+            return findFirefly().then(
+                ({firefly}) => firefly.action.dispatchChangeActivePlotView(this.plotId)
+            );
         }
 
-        let firefly, fireflyURL;
-        return findFirefly()
-            .then( (ffConfig) => {
-                firefly= ffConfig.firefly;
-                fireflyURL= ffConfig.fireflyURL;
-                if (useModelFirst) {
-                    return context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly, fireflyURL));
+        try {
+            const { firefly, fireflyURL } = await findFirefly();
+
+            // 1. Acquire server response (either upload file from JL-client model OR ask JL server to upload)
+            let responseText;
+            if (useModelFirst) {
+                await context.ready; // ensure model contents ready
+                const uploadResp = await loadFileToServer(context.model.toString(), this.filename, firefly, fireflyURL);
+                responseText = await uploadResp.text();
+            } else {
+                const serverResp = await tellLabToLoadFileToServer(this.filename, firefly);
+                responseText = await serverResp.text();
+            }
+
+            // 2. Interpret response or fallback
+            let cacheKey = null; // Firefly server cache key for the uploaded file
+            if (useModelFirst) {
+                [, cacheKey] = (responseText || '').split('::::'); // Expected format: <something>::::<cacheKey>
+                if (!cacheKey) {
+                    console.warn('Firefly FitsViewExt: unexpected upload response, cannot extract cache key');
                 }
-                else {
-                    return tellLabToLoadFileToServer(this.filename, firefly);
-                }
-            } )
-            .then( (response) => response.text())
-            .then( (text) => {
-                if (useModelFirst) {
-                    const [, cacheKey] = text.split('::::');
-                    showImage(cacheKey,this.plotId, this.filename, firefly);
-                }
-                else {
-                    if (text && text.length<300 && text.startsWith('${')) {
-                        showImage(text,this.plotId, this.filename, firefly);
+            } else {
+                if (responseText && responseText.length < 300 && responseText.startsWith('${')) { // Server upload succeeded; response itself is the cache key
+                    cacheKey = responseText;
+                } else { // Fallback to client upload
+                    console.log('Firefly FitsViewExt: failed to upload from server, falling back to (slower) browser upload');
+                    await context.ready;
+                    const upResp = await loadFileToServer(context.model.toString(), this.filename, firefly, fireflyURL);
+                    const upText = await upResp.text();
+                    [, cacheKey] = (upText || '').split('::::');
+                    if (!cacheKey) {
+                        console.error('Firefly FitsViewExt: fallback upload response missing cache key');
                     }
-                    else {
-                        console.log('Firefly FitsViewExt: Failed to upload from server, ' +
-                                          'falling back to (slower) browser upload.');
-                        context.ready.then(() => loadFileToServer(context.model.toString(), this.filename, firefly, fireflyURL))
-                            .then( (response) => response.text())
-                            .then( (text) => {
-                                const [, cacheKey] = text.split('::::');
-                                showImage(cacheKey, this.plotId, this.filename, firefly);
-                            });
-                    }
                 }
-                this.loaded= true;
-            })
-            .catch( (e) => {
-                const div= document.getElementById(this.filename);
-                if (div) div.innerHTML=buildURLErrorHtml(e);
-            });
+            }
+
+            // 3. Show image if upload succeeded and we have a cache key for the file
+            if (cacheKey) {
+                showImage(cacheKey, this.plotId, this.filename, firefly);
+                this.loaded = true;
+                return;
+            }
+
+            // If we reach here we failed to display
+            const div = document.getElementById(this.filename);
+            if (div && !this.loaded) {
+                div.innerHTML = buildURLErrorHtml('Failed to load FITS file');
+            }
+        } catch (e) {
+            const div = document.getElementById(this.filename);
+            if (div) div.innerHTML = buildURLErrorHtml(e);
+        }
     }
 
     dispose() {
-        return findFirefly()
-            .then( (ffConfig) => ffConfig.firefly.action.dispatchDeletePlotView({plotId:this.plotId, holdWcsMatch:true}) );
-
+        // Attempt to remove Firefly image view; ignore errors if firefly not available.
+        findFirefly()
+            .then(({ firefly }) => firefly.action.dispatchDeletePlotView({ plotId: this.plotId, holdWcsMatch: true }))
+            .catch(() => undefined);
+        super.dispose();
     }
 
     activate() {
         super.activate();
         if (this.loaded) {
-            return findFirefly().then( (ffConfig) => ffConfig.firefly.action.dispatchChangeActivePlotView(this.plotId) );
+            return findFirefly().then(
+                ({ firefly }) => firefly.action.dispatchChangeActivePlotView(this.plotId)
+            );
         }
     }
 }
 
-
-function tellLabToLoadFileToServer( path, firefly) {
-    const url= makeLabEndpoint('lab/sendToFirefly', new URLSearchParams({'path':path}));
-    return firefly.util.fetchUrl(url,{ method: 'GET' },false, false)
-        .catch( (e) => {
-            console.error('Firefly FitsViewExt: Got Error from upload request',e);
+/**
+ * Load a file to the Firefly server from JL server.
+ * 
+ * Invokes the server extension (at /lab/sendToFirefly endpoint) to upload 
+ * the file by using the firefly python client
+ */
+function tellLabToLoadFileToServer(path, firefly) {
+    const url = makeLabEndpoint('lab/sendToFirefly', new URLSearchParams({ path }));
+    return firefly.util
+        .fetchUrl(url, { method: 'GET' }, false, false)
+        .catch(e => {
+            console.error('Firefly FitsViewExt: error from upload request', e);
             return 'FAILED';
         });
 }
 
-
-function loadFileToServer( fileData, filename, firefly, fireflyURL) {
-    const {fetchUrl, ServerParams}= firefly.util;
-    const UL_URL = `${fireflyURL}/sticky/CmdSrv?${ServerParams.COMMAND}=${ServerParams.UPLOAD}&filename=${filename}`;
-    const fitsBlob= b64toBlob(fileData);
-    const options = { method: 'multipart', params: { filename, type:'FITS', file: fitsBlob } };
-    return fetchUrl(UL_URL, options);
+/**
+ * Load a file to the Firefly server from the JL client.
+ * 
+ * It's slower because JL client will read the file into browser memory first, 
+ * encode it and then upload to server.
+ */
+function loadFileToServer(fileData, filename, firefly, fireflyURL) {
+    const { fetchUrl, ServerParams } = firefly.util;
+    const UPLOAD_URL = `${fireflyURL}/sticky/CmdSrv?${ServerParams.COMMAND}=${ServerParams.UPLOAD}&filename=${encodeURIComponent(filename)}`;
+    const fitsBlob = b64toBlob(fileData);
+    const options = { method: 'multipart', params: { filename, type: 'FITS', file: fitsBlob } };
+    return fetchUrl(UPLOAD_URL, options);
 }
 
+/**
+ * Show an uploaded FITS file as image in the Firefly viewer.
+ * 
+ * This calls the Firefly JS API directly to dispatch the image display action.
+ */
 function showImage(cacheKey, plotId, filename, firefly) {
-    const req= {
-        type     : 'FILE',
-        FILE     : cacheKey,
+    const req = {
+        type: 'FILE',
+        FILE: cacheKey,
         plotId,
         plotGroupId: 'JUPLAB',
         title: filename
     };
     firefly.action.dispatchApiToolsView(true, false);
-    firefly.setGlobalPref({imageDisplayType: 'encapusulate'});
+    firefly.setGlobalPref({ imageDisplayType: 'encapusulate' });
     firefly.showImage(filename, req, null, false);
 }
 
 function createNode(filename) {
     const node = document.createElement('div');
-    node.id= filename;
+    node.id = filename;
     return node;
 }
 

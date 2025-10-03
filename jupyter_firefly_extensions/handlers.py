@@ -146,6 +146,10 @@ def setup_handlers(server_app):
     send_pattern = url_path_join(web_app.settings['base_url'], 'lab/sendToFirefly')
     get_ff_data_pattern = url_path_join(web_app.settings['base_url'], 'lab/fireflyLocation')
     web_app.add_handlers(host_pattern, [
+        # used by `tellLabToLoadFileToServer()` at JL client for requesting JL server to
+        # do FireflyClient.upload_file() and return the name of file on server (cache key)
         (send_pattern, SendToFireflyHandler, {'notebook_dir': server_app.notebook_dir, 'firefly_url': url}),
+
+        # used by `findFirefly()` at JL client for retrieving the `firefly_config` JSON from JL server
         (get_ff_data_pattern, GetFireflyUrlData, {})
     ])
