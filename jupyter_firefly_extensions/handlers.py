@@ -137,12 +137,12 @@ def setup_handlers(server_app):
 
     # setup server extension endpoints ----------------------------------
     host_pattern = '.*$'
-    send_pattern = url_path_join(web_app.settings['base_url'], 'lab/sendToFirefly')
-    get_ff_data_pattern = url_path_join(web_app.settings['base_url'], 'lab/fireflyLocation')
+    send_pattern = url_path_join(web_app.settings['base_url'], 'jupyter-firefly-extensions', 'sendToFirefly')
+    get_ff_data_pattern = url_path_join(web_app.settings['base_url'], 'jupyter-firefly-extensions', 'fireflyLocation')
     web_app.add_handlers(host_pattern, [
         # used by `tellLabToLoadFileToServer()` at JL client for requesting JL server to
         # do FireflyClient.upload_file() and return the name of file on server (cache key)
-        # e.g. GET http://127.0.0.1:8888/lab/sendToFirefly?path=x.fits -> '${upload-dir}/...x.fits'
+        # e.g. GET http://127.0.0.1:8888/jupyter-firefly-extensions/sendToFirefly?path=x.fits -> '${upload-dir}/...x.fits'
         (send_pattern, SendToFireflyHandler, {
             # parameters to instantiate the class
             'notebook_dir': server_app.notebook_dir,
@@ -151,7 +151,7 @@ def setup_handlers(server_app):
         }),
 
         # used by `findFirefly()` at JL client for retrieving the `firefly_config` JSON from JL server
-        # e.g. GET http://127.0.0.1:8888/lab/fireflyLocation -> JSON {fireflyURL, channel, firefly, fireflyHtmlFile, ...}
+        # e.g. GET http://127.0.0.1:8888/jupyter-firefly-extensions/fireflyLocation -> JSON {fireflyURL, channel, firefly, fireflyHtmlFile, ...}
         (get_ff_data_pattern, GetFireflyUrlData, {
             'logger': logger
         })

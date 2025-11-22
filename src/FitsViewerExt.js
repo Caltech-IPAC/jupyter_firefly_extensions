@@ -1,7 +1,8 @@
 import b64toBlob from 'b64-to-blob';
-import { buildURLErrorHtml, findFirefly, makeLabEndpoint } from './FireflyCommonUtils.js';
+import { buildURLErrorHtml, findFirefly } from './FireflyCommonUtils.js';
 import { Widget } from '@lumino/widgets';
 import { ABCWidgetFactory, DocumentWidget } from '@jupyterlab/docregistry';
+import { requestAPI } from './handler';
 
 
 export const FITS_MIME_TYPE = 'application/fits';
@@ -111,8 +112,7 @@ export class FitsViewerWidget extends Widget {
                 const uploadResp = await loadFileToServer(context.model.toString(), this.filename, firefly, fireflyURL);
                 responseText = await uploadResp.text();
             } else {
-                const serverResp = await tellLabToLoadFileToServer(this.filename, firefly);
-                responseText = await serverResp.text();
+                 responseText = await tellLabToLoadFileToServer(this.filename, firefly);
             }
 
             // 2. Interpret response or fallback
@@ -139,6 +139,7 @@ export class FitsViewerWidget extends Widget {
 
             // 3. Show image if upload succeeded and we have a cache key for the file
             if (cacheKey) {
+                // firefly.action.dispatchExternalUpload({fileOnServer: cacheKey, immediate: false}); //TODO: remove after testing
                 showImage(cacheKey, this.plotId, this.filename, firefly);
                 this.loaded = true;
                 return;
@@ -176,16 +177,16 @@ export class FitsViewerWidget extends Widget {
 /**
  * Load a file to the Firefly server from JL server.
  * 
- * Invokes the server extension (at /lab/sendToFirefly endpoint) to upload 
- * the file by using the firefly python client
+ * Invokes the server extension (at /jupyter-firefly-extensions/sendToFirefly endpoint)
+ * to upload the file by using the firefly python client
  */
 function tellLabToLoadFileToServer(path, firefly) {
-    const url = makeLabEndpoint('lab/sendToFirefly', new URLSearchParams({ path }));
-    return firefly.util
-        .fetchUrl(url, { method: 'GET' }, false, false)
-        .catch(e => {
-            console.error('Firefly FitsViewExt: error from upload request', e);
-            return 'FAILED';
+    console.debug(`Firefly FitsViewExt: asking JL server to upload file: ${path}`);
+    return requestAPI(`sendToFirefly?path=${encodeURIComponent(path)}`)
+        .then((response) => response.text())
+        .catch((e) => {
+            console.error('Firefly FitsViewExt: error from server upload request', e);
+            return 'FAILED'; // dummy response text to trigger fallback
         });
 }
 
@@ -200,13 +201,14 @@ function loadFileToServer(fileData, filename, firefly, fireflyURL) {
     const UPLOAD_URL = `${fireflyURL}/sticky/CmdSrv?${ServerParams.COMMAND}=${ServerParams.UPLOAD}&filename=${encodeURIComponent(filename)}`;
     const fitsBlob = b64toBlob(fileData);
     const options = { method: 'multipart', params: { filename, type: 'FITS', file: fitsBlob } };
+    console.debug(`Firefly FitsViewExt: uploading file from JL client to ${UPLOAD_URL}`);
     return fetchUrl(UPLOAD_URL, options);
 }
 
 /**
  * Show an uploaded FITS file as image in the Firefly viewer.
  * 
- * This calls the Firefly JS API directly to dispatch the image display action.
+ * This calls the Firefly JS API directly to display an image viewer for the file.
  */
 function showImage(cacheKey, plotId, filename, firefly) {
     const req = {
@@ -216,9 +218,12 @@ function showImage(cacheKey, plotId, filename, firefly) {
         plotGroupId: 'JUPLAB',
         title: filename
     };
-    firefly.action.dispatchApiToolsView(true, false);
-    firefly.setGlobalPref({ imageDisplayType: 'encapusulate' });
-    firefly.showImage(filename, req, null, false);
+    // firefly.action.dispatchApiToolsView(true);
+    // firefly.setGlobalPref({ imageDisplayType: 'encapusulate' });
+
+    // high-level API that attaches an independent imageviewer to a target div
+    // alongside dispatching action to display the image in that viewer
+    firefly.showImage(filename, req, null, false); // targetDivId = filename
 }
 
 function createNode(filename) {

@@ -1,10 +1,10 @@
 import {initFirefly} from 'firefly-api-access';
-import { ServerConnection } from '@jupyterlab/services';
+import {requestAPI} from './handler';
 
 
 let cachedLoc;
 let cachedFindFireflyResult;
-const ffLocURL= makeLabEndpoint('lab/fireflyLocation');
+const ffLocEndpoint = 'fireflyLocation';
 const fetchOptions= {
     method: 'get',
     mode: 'cors',
@@ -22,13 +22,15 @@ export async function findFirefly()  {
     if (cachedFindFireflyResult) return cachedFindFireflyResult;
 
     try {
-        // request the config from server at /lab/fireflyLocation (see handlers.py)
-        const settings = ServerConnection.makeSettings();
-        if (!cachedLoc) cachedLoc= await (await ServerConnection.makeRequest(ffLocURL, fetchOptions, settings)).json();
+        // request the config from server at /jupyter-firefly-extensions/fireflyLocation (see handlers.py)
+        if (!cachedLoc) {
+            const response = await requestAPI(ffLocEndpoint, fetchOptions);
+            cachedLoc = await response.json();
+        }
 
         // make sure that response of the above request contains non-empty fireflyURL
         const {fireflyURL, fireflyChannel:channel, fireflyHtmlFile}= cachedLoc;
-        if (!fireflyURL) throw new Error(`fireflyURL couldn't be retrieved from ${ffLocURL}`);
+        if (!fireflyURL) throw new Error(`fireflyURL couldn't be retrieved from ${ffLocEndpoint} endpoint`);
 
         // load firefly API from fireflyURL at /lab (window)
         // (CORS errors might happen here if headers aren't set up correctly, maybe due to caching)
@@ -60,13 +62,4 @@ export function buildURLErrorHtml(e) {
                     <code>jupyter_notebook_config.py</code>
                     <br>or the environment variable <code>FIREFLY_URL</code>`;
     return `<div style='padding: 30px 0 0 30px'>${e.message}${details}</div>`;
-}
-
-
-export function makeLabEndpoint(endPoint, searchParams) {
-    const {origin,pathname}= new URL(window.document.location.href);
-    const originURL= origin + pathname;
-    const start= originURL.substring(0, originURL.lastIndexOf('lab'));
-    const slashMaybe= start.endsWith('/') ? '' : '/';
-    return `${start}${slashMaybe}${endPoint}${searchParams?'?'+searchParams.toString():''}`;
 }

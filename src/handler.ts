@@ -1,7 +1,5 @@
 /**
  * This is JupyterLab's recommended way of creating handlers for extension with server.
- * We're currently implementing our own handlers in ./*.js files, so this file is not being used
- * but might be useful in the future when we adopt it and switch to TS completely. 
  */
 
 import { URLExt } from '@jupyterlab/coreutils';
@@ -13,17 +11,17 @@ import { ServerConnection } from '@jupyterlab/services';
  *
  * @param endPoint API REST end point for the extension
  * @param init Initial values for the request
- * @returns The response body interpreted as JSON
+ * @returns The response object
  */
-export async function requestAPI<T>(
+export async function requestAPI(
   endPoint = '',
   init: RequestInit = {}
-): Promise<T> {
+): Promise<Response> {
   // Make request to Jupyter API
   const settings = ServerConnection.makeSettings();
   const requestUrl = URLExt.join(
     settings.baseUrl,
-    'jupyterlab-examples-server', // API Namespace
+    'jupyter-firefly-extensions', // API Namespace
     endPoint
   );
 
@@ -34,19 +32,10 @@ export async function requestAPI<T>(
     throw new ServerConnection.NetworkError(error as any);
   }
 
-  let data: any = await response.text();
-
-  if (data.length > 0) {
-    try {
-      data = JSON.parse(data);
-    } catch (error) {
-      console.log('Not a JSON response body.', response);
-    }
-  }
-
   if (!response.ok) {
-    throw new ServerConnection.ResponseError(response, data.message || data);
+    const data = await response.text();
+    throw new ServerConnection.ResponseError(response, data);
   }
 
-  return data;
+  return response;
 }
