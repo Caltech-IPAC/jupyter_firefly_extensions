@@ -117,7 +117,7 @@ export class SlateRootWidget extends Widget {
             set(props,'slotProps.banner.slotProps.icon.sx', 
                 {'.MuiSvgIcon-root': {height: '3rem', width: '3rem', pl: 0}});
         }
-        action.dispatchApiToolsView(true,false);
+        action.dispatchApiToolsView(true);
         this.controlApp= util.startAsAppFromApi(id, props);
     }
 
