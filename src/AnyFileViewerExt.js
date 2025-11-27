@@ -95,10 +95,12 @@ async function forwardToFirefly(app, filepath) {
 	// 3) Tell Firefly JS API to display the uploaded file
 	try {
 		const { firefly } = await findFirefly();
+
+        const displayName = filepath.substring(filepath.lastIndexOf('/') + 1);
 		firefly.action.dispatchExternalUpload({
 			fileOnServer: cacheKey,
 			immediate: false,
-			displayName: filepath
+			displayName
 		});
 	} catch (e) {
 		console.error('Error dispatching external upload to Firefly client:', e);
