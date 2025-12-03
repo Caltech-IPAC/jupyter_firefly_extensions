@@ -7,7 +7,7 @@ import { requestAPI } from './handler';
 
 export const FITS_MIME_TYPE = 'application/fits';
 const CLASS_NAME = 'jp-OutputWidgetFITS'; // the class name added to the extension
-const FACTORY = 'Firefly (Image Viewer)';
+const FACTORY = 'Firefly - Individual Image Viewer';
 
 let idCounter=0;
 
