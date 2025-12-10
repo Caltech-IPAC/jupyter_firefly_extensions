@@ -1,4 +1,5 @@
 import { ABCWidgetFactory, DocumentModel } from '@jupyterlab/docregistry';
+import { Dialog, showErrorMessage } from '@jupyterlab/apputils';
 import { Widget } from '@lumino/widgets';
 import { requestAPI } from './handler';
 import { findFirefly } from './FireflyCommonUtils.js';
@@ -78,11 +79,28 @@ export function activateAnyFileViewerExt(app, _restorer) {
 }
 
 async function forwardToFirefly(app, filepath) {
+    const filename = filepath.substring(filepath.lastIndexOf('/') + 1);
+
+	// Create and show a non-blocking progress dialog
+	const progressDialog = new Dialog({
+		title: 'Firefly Viewer',
+		body: `Uploading and opening "${filename}" in Firefly…`,
+		buttons: []
+	});
+	void progressDialog.launch();
+
+	const handleFailure = (title, err) => {
+		const msg = `${err?.message ?? err}`;
+		console.error(`${title}:\n${msg}`);
+		progressDialog.close();
+		showErrorMessage(title, msg); // shows a error dialog in JupyterLab
+	};
+
 	// 1) Ensure Firefly Viewer is open/active (singleton behavior handled by SlateCommandExt)
 	try {
 		await app.commands.execute(SLATE_CMD_ID);
 	} catch (e) {
-		console.error('Could not activate Firefly viewer:', e);
+		handleFailure('Failed to activate Firefly Viewer', e);
 		return;
 	}
 
@@ -90,29 +108,30 @@ async function forwardToFirefly(app, filepath) {
 	let cacheKey;
 	try {
         const responseText = await (await requestAPI(`sendToFirefly?path=${encodeURIComponent(filepath)}`)).text();
-        if (!responseText?.startsWith('${')) {
+		if (!responseText?.startsWith('${')) {
             throw new Error(`Unexpected response from Firefly server: ${responseText}`);
         }
         cacheKey = responseText;
 	} catch (e) {
-		console.error('Error while uploading to Firefly server:', e);
+		handleFailure('Upload to Firefly Failed', e);
 		return;
 	}
 
 	// 3) Tell Firefly JS API to display the uploaded file
 	try {
 		const { firefly } = await findFirefly();
-
-		const displayName = filepath.substring(filepath.lastIndexOf('/') + 1);
 		firefly.action.dispatchExternalUpload({
 			fileOnServer: cacheKey,
 			immediate: false,
-			displayName
+			displayName: filename
 		});
 	} catch (e) {
-		console.error('Error dispatching external upload to Firefly client:', e);
+		handleFailure('Open in Firefly Failed', e);
+		return;
 	}
+    
     console.debug('File forwarded to Firefly Viewer successfully: ', filepath);
+	progressDialog.close();
 }
 
 // ---------------------------------------------------------------------
