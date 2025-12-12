@@ -12,7 +12,8 @@ import fireflyIconStr from '../style/fftools-logo.svg';
 let widgetId;
 const TAB_ID= 'firefly-viewer-tab-id';
 export const SLATE_CMD_ID = 'firefly:open-slate-viewer';
-const SLATE_CMD_LABEL = 'Open Firefly Viewer';
+const SLATE_CMD_LABEL = 'Firefly Viewer';
+const SLATE_CMD_CAPTION = 'Visualize astronomical data as interactive images, tables, and charts';
 
 /**
  * Extension can be started in two ways.
@@ -45,7 +46,7 @@ export function activateSlateCommandExt(app, palette, launcher) {
 
     app.commands.addCommand(command, {
         label: SLATE_CMD_LABEL,
-        caption: SLATE_CMD_LABEL,
+        caption: SLATE_CMD_CAPTION,
         icon,
         isEnabled: () => true,
         execute: () => {
