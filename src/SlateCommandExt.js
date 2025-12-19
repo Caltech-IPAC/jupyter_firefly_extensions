@@ -11,6 +11,9 @@ import fireflyIconStr from '../style/fftools-logo.svg';
 
 let widgetId;
 const TAB_ID= 'firefly-viewer-tab-id';
+export const SLATE_CMD_ID = 'firefly:open-slate-viewer';
+const SLATE_CMD_LABEL = 'Firefly Viewer';
+const SLATE_CMD_CAPTION = 'Visualize astronomical data as interactive images, tables, and charts';
 
 /**
  * Extension can be started in two ways.
@@ -34,7 +37,7 @@ export function activateSlateCommandExt(app, palette, launcher) {
     });
 
     // for starting extension as a jupyter command -----------
-    const command = 'firefly:open-slate';
+    const command = SLATE_CMD_ID;
     const category = 'Firefly';
     const icon = new LabIcon({
         name: 'jupyter_firefly_extensions:firefly-icon',
@@ -42,8 +45,8 @@ export function activateSlateCommandExt(app, palette, launcher) {
       }); 
 
     app.commands.addCommand(command, {
-        label: 'Open Firefly',
-        caption: 'Open Firefly',
+        label: SLATE_CMD_LABEL,
+        caption: SLATE_CMD_CAPTION,
         icon,
         isEnabled: () => true,
         execute: () => {
@@ -117,7 +120,7 @@ export class SlateRootWidget extends Widget {
             set(props,'slotProps.banner.slotProps.icon.sx', 
                 {'.MuiSvgIcon-root': {height: '3rem', width: '3rem', pl: 0}});
         }
-        action.dispatchApiToolsView(true,false);
+        action.dispatchApiToolsView(true);
         this.controlApp= util.startAsAppFromApi(id, props);
     }
 

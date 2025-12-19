@@ -1,16 +1,20 @@
 # jupyter_firefly_extensions
 
-JupyterLab extensions for rendering FITS and displaying tables, images, & charts with Firefly.
+JupyterLab extensions for opening astronomical data files and displaying tables, images, & charts with Firefly.
 
 
 ## Overview
 
 These extensions add the following features to JupyterLab:
 
-  - Open a FITS file from the file browser and see it in a tab.
   - Start the full Firefly viewer in a tab (either through launcher or command palette).
   - Use `FireflyClient` in notebook to start Firefly in a tab and send data
-  (tables, images, charts) to it using the `FireflyClient` python API.
+    (tables, images, charts) to it using the `FireflyClient` python API.
+  - Open any astronomical data file from JupyterLab file browser with the Firefly Viewer.
+    This enables you to open .fits, .parquet, .vot, .xml, .tbl, .csv, .tsv, etc.
+    file formats within JupyterLab, preview their metadata, and visualize the selected data items
+    as images, tables, or charts in Firefly.
+    
 
 
 ## Prerequisites
@@ -107,9 +111,16 @@ jupyter server extension enable jupyter_firefly_extensions
 
 # Build extension TS/JS source
 jlpm run build
+```
 
-# Alternatively, watch TS/JS source so that changes in it reflect automatically on lab
+_Additionally,_ for autoreload of source code during development, you can use:
+```bash
+# Build extension's TS/JS source automatically each time a source file is changed.
+# You still need to reload the JupyterLab browser tab to see the changes.
 jlpm watch
+
+# Start jupyter lab with autoreload of the extension's Python source.
+jupyter lab --autoreload
 ```
 
 

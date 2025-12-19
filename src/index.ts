@@ -5,13 +5,14 @@ import { ILauncher } from '@jupyterlab/launcher';
 
 import { activateSlateCommandExt } from './SlateCommandExt.js';
 import { activateFitsViewerExt } from './FitsViewerExt.js';
+import { activateAnyFileViewerExt } from './AnyFileViewerExt.js';
 
 /**
  * Initialization data for each extension.
  */
 const showSlateExt: JupyterFrontEndPlugin<void> = {
   id: 'jupyter_firefly_extensions:showSlate',
-  description: 'Show firefly slate',
+  description: 'Show Firefly Viewer',
   autoStart: true,
   requires: [ICommandPalette],
   optional: [ILauncher],
@@ -26,5 +27,13 @@ const fitsViewerExt: JupyterFrontEndPlugin<void> = {
   activate: activateFitsViewerExt
 };
 
+const anyFileViewerExt: JupyterFrontEndPlugin<void> = {
+  id: 'jupyter_firefly_extensions:anyfileviewer',
+  description: 'Open files with Firefly Viewer',
+  autoStart: true,
+  requires: [ILayoutRestorer],
+  activate: activateAnyFileViewerExt
+};
+
 // More than one extension/plugin can be exported as a list
-export default [showSlateExt, fitsViewerExt];
+export default [showSlateExt, fitsViewerExt, anyFileViewerExt];
