@@ -1,6 +1,6 @@
 {
   "name": "jupyter_firefly_extensions",
-  "version": "4.5.0",
+  "version": "4.5.1",
   "description": "Jupyterlab extensions for rendering FITS and displaying tables, images, & charts with Firefly",
   "keywords": [
     "jupyter",
@@ -16,7 +16,7 @@
   },
   "license": "BSD-3-Clause",
   "author": {
-    "name": "Trey Roby",
+    "name": "IPAC Firefly Developers",
     "email": "roby@ipac.caltech.edu"
   },
   "files": [
