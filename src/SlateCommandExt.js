@@ -78,7 +78,7 @@ function openSlateSingleOnly(app, id, firelfyHtmlFile) {
             action.dispatchChangeActivePlotView(undefined);
         });
     }
-    app.shell.activateById(widgetId);
+    app.shell.activateById(widgetId); // this is where JL ("app") renders the SlateRootWidget 
 }
 
 export class SlateRootWidget extends Widget {
@@ -90,6 +90,8 @@ export class SlateRootWidget extends Widget {
         this.id= id;
         this.title.label= 'Firefly Viewer';
         this.title.closable= true;
+        this.node.tabIndex= -1; // makes node programmatically focusable for JL FocusTracker
+        this.node.style.outline= 'none'; // suppress browser focus ring that tabIndex=-1 triggers
         findFirefly().then( (ffConfig) => {
             this.startViewer(ffConfig.firefly, id, ffConfig.fireflyURL, fireflyHtmlFile ?? ffConfig.fireflyHtmlFile);
         } );
@@ -124,22 +126,20 @@ export class SlateRootWidget extends Widget {
         this.controlApp= util.startAsAppFromApi(id, props);
     }
 
-    dispose() {
-        widgetId= undefined;
+    onCloseRequest(msg) {
+        super.onCloseRequest(msg); // detaches widget from shell
+        this.dispose();            // JL shell never calls dispose() on tab close — we must
     }
-    close() {
-        super.close();
+
+    dispose() {
         widgetId= undefined;
         if (this.controlApp) this.controlApp.unrender();
         this.controlApp= undefined;
+        super.dispose();
     }
 
-    activate() {
-        super.activate();
-        if (this.controlApp) {
-            this.controlApp.unrender();
-            this.controlApp.render();
-        }
+    onActivateRequest(_msg) {
+        this.node.focus(); // fires DOM focus event → JL FocusTracker sets jp-mod-current on tab
         findFirefly().then( (ffConfig) => {
             const {action}= ffConfig.firefly;
             action.dispatchChangeActivePlotView(undefined);
