@@ -3,17 +3,27 @@
 JupyterLab extensions for opening astronomical data files and displaying tables, images, & charts with Firefly.
 
 
-## Overview
+## Features
 
-These extensions add the following features to JupyterLab:
+### 1. Open a Firefly Viewer tab
 
-  - Start the full Firefly viewer in a tab (either through launcher or command palette).
-  - Use `FireflyClient` in notebook to start Firefly in a tab and send data
-    (tables, images, charts) to it using the `FireflyClient` python API.
-  - Open any astronomical data file from JupyterLab file browser with the Firefly Viewer.
-    This enables you to open .fits, .parquet, .vot, .xml, .tbl, .csv, .tsv, etc.
-    file formats within JupyterLab, preview their metadata, and visualize the selected data items
-    as images, tables, or charts in Firefly.
+Open [Firefly](https://github.com/Caltech-IPAC/firefly), the web-based GUI for astronomical data visualization, in a dedicated JupyterLab tab.
+
+- In the JupyterLab launcher (or "+" tab), scroll down to the "Firefly" section and click "Firefly Viewer".
+- Or open the JupyterLab command palette and search for "Firefly Viewer".
+
+### 2. Open astronomical files from the file browser
+
+Open any supported astronomical data file from the JupyterLab file browser directly in the Firefly Viewer. Supported formats include `.fits`, `.reg`, `.vot`, `.xml`, `.parquet`, `.tbl`, `.csv`, `.tsv`.
+
+- Double-click a supported file to open it in the Firefly Viewer tab.
+- Or right-click the file and select "Open With > Firefly Viewer".
+
+### 3. Visualize the data from a notebook interactively
+
+Use the `FireflyClient` Python API in a notebook to interactively visualize tables, images, and charts in the Firefly Viewer tab.
+
+- Use `FireflyClient.make_lab_client()` to connect to the Firefly Viewer tab inside JupyterLab — see the [initialization guide](https://caltech-ipac.github.io/firefly_client/usage/initializing-vanilla.html#2.-From-JupyterLab). Then explore the [usage examples](https://caltech-ipac.github.io/firefly_client/usage/) in the `firefly_client` documentation.
     
 
 
@@ -82,7 +92,7 @@ In your environment with the prerequisites met,
 pip install jupyter-firefly-extensions
 ```
 
-Open JupyterLab (with `jupyter lab`) to start using these extensions - see [examples](#examples) to learn how.
+Open JupyterLab (with `jupyter lab`) to start using these extensions as described in the [Features](#features) section above.
 
 
 ### Development install
@@ -139,18 +149,6 @@ jupyter lab --autoreload
 ```bash
 pip uninstall jupyter-firefly-extensions
 ```
-
-
-## Examples
-The `examples` directory has several example notebooks to demonstrate the extension features. When using the examples you should copy the directory and contents to another place or jupyter lab will and to keep rebuilding
-
- - `slate-demo-explicit.ipynb`, `slate-demo-explicit2.ipynb` - demonstrates
-    opening a Firefly tab and sending data to it with the `FireflyClient` python API
- - Other notebooks demonstrate capabilites of widgets which are no longer supported, so they won't work.
-
-
-Besides this, you can also use this extension to display fits images. In the file browser of jupyter lab, simply clicking on a `.fits`  file will show the image in a new tab.
-
 
 
 ## Troubleshooting
